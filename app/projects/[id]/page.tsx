@@ -14,8 +14,12 @@ import {
 interface Task {
   id: string;
   title: string;
-  status: string;
   description?: string;
+  status: string;
+  assignedTo?: string | null;
+  assignedToId?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Project {
@@ -29,10 +33,11 @@ export default function ProjectBoard({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id: projectId } = use(params);
   const { data: session, status } = useSession();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,10 +47,10 @@ export default function ProjectBoard({
   }, [status, router]);
 
   useEffect(() => {
-    if (status === "authenticated" && id) {
+    if (status === "authenticated" && projectId) {
       const fetchProject = async () => {
         try {
-          const res = await fetch(`/api/projects/${id}`);
+          const res = await fetch(`/api/projects/${projectId}`);
           if (res.ok) {
             const data = await res.json();
             setProject(data);
@@ -58,7 +63,72 @@ export default function ProjectBoard({
       };
       fetchProject();
     }
-  }, [status, id]);
+  }, [status, projectId]);
+
+
+   const handleCreateTask = async (e: React.FormEvent) => {
+     e.preventDefault();
+     if (!newTaskTitle.trim() || !project) return;
+
+     try {
+       const res = await fetch("/api/tasks", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ title: newTaskTitle, projectId }),
+       });
+
+       if (res.ok) {
+         const newTask = await res.json();
+         const updatedProject = {
+           ...project,
+           tasks: [...project.tasks, newTask],
+         };
+         setProject(updatedProject);
+         setNewTaskTitle("");
+       }
+     } catch (error) {
+       console.error("Error creating task:", error);
+     }
+   };
+
+   const onDragEnd = async (result: DropResult) => {
+     const { destination, source, draggableId } = result;
+
+     if (
+       !destination ||
+       !project ||
+       destination.droppableId === source.droppableId
+     ) {
+       return;
+     }
+
+     const newStatus = destination.droppableId;
+     const taskId = draggableId;
+
+     // Optimistic update: actualizamos la UI inmediatamente para una mejor UX
+     const updatedTasks = project.tasks.map((task) =>
+       task.id === taskId ? { ...task, status: newStatus } : task
+     );
+     setProject({ ...project, tasks: updatedTasks });
+
+     // Llamamos a la API para persistir el cambio en la base de datos
+     try {
+       const res = await fetch(`/api/tasks/${taskId}`, {
+         method: "PUT",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ status: newStatus }),
+       });
+
+       if (!res.ok) {
+         // Si la actualización falla, revertimos el cambio en la UI
+         setProject(project);
+         console.error("Failed to update task status in DB.");
+       }
+     } catch (error) {
+       console.error("Error updating task status:", error);
+       setProject(project); // Revertir el cambio
+     }
+   };
 
   if (isLoading || status === "loading") {
     return (
@@ -82,24 +152,27 @@ export default function ProjectBoard({
     DONE: project.tasks.filter((t) => t.status === "DONE"),
   };
 
-  const onDragEnd = (result: DropResult<string>) => {
-    const { destination, source, draggableId } = result;
-
-    if (!destination) {
-      return;
-    }
-
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-  };
-
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-4xl font-bold mb-8">{project.title}</h1>
+      {/* Formulario para crear nuevas tareas */}
+      <div className="mb-8">
+        <form onSubmit={handleCreateTask} className="flex gap-4">
+          <input
+            type="text"
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            placeholder="Título de la nueva tarea"
+            className="flex-grow px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="px-6 py-2 bg-green-600 text-white font-bold rounded-md hover:bg-green-700"
+          >
+            Añadir Tarea
+          </button>
+        </form>
+      </div>
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex space-x-4 overflow-x-auto">
           {Object.entries(columns).map(([columnId, tasks]) => (

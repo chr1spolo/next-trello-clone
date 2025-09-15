@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params: { id } }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
   res: NextResponse
 ) {
   const session = await getServerSession({
@@ -19,7 +19,8 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  
+  const { id } = await params;
+
   if (!id) {
     return NextResponse.json(
       { error: "Project ID is required" },
