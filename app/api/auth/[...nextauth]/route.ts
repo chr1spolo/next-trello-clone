@@ -1,12 +1,21 @@
 import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@/app/generated/prisma/wasm";
+import { PrismaClient } from "@prisma/client";
+import { DefaultSession } from "next-auth";
 
-const prisma = new PrismaClient();
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+    } & DefaultSession["user"];
+  }
+}
+
+export const prismaClientDefault = new PrismaClient();
 
 const handler = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prismaClientDefault),
   providers: [
     GoogleProvider({
       clientId: process.env.NEXTAUTH_GOOGLE_ID as string,
@@ -19,20 +28,17 @@ const handler = NextAuth({
         },
       },
     }),
-    // Puedes agregar más proveedores aquí, como GitHubProvider
   ],
   pages: {
     signIn: "/",
     error: "/",
   },
   callbacks: {
-    async session({ session, token }) {
-      console.log("Session callback:", { session, token });
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+      }
       return session;
-    },
-    async jwt({ token, user }) {
-      console.log("JWT callback:", { token, user });
-      return token;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
