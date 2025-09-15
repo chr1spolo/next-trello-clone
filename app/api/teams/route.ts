@@ -36,7 +36,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
     res,
     ...authOptions,
   });
-  console.log("Session in POST /api/teams:", session);
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

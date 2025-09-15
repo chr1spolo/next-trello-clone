@@ -5,9 +5,10 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { Task } from "@/types/Task";
 import { Comment } from "@/types/Comment";
+import { twMerge } from "@/utils/twMerge";
 
 interface TaskModalProps {
-  task: Task;
+  task: Task | null;
   onClose: () => void;
   onUpdate: (updatedTask: Task) => void;
   onAddComment: (newComment: Comment) => void;
@@ -21,14 +22,14 @@ export default function TaskModal({
 }: TaskModalProps) {
   const { data: session } = useSession();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(task.title);
+  const [editedTitle, setEditedTitle] = useState(task?.title || "");
   const [editedDescription, setEditedDescription] = useState(
-    task.description || ""
+    task?.description || ""
   );
   const [newComment, setNewComment] = useState("");
 
   const handleUpdate = async () => {
-    const res = await fetch(`/api/tasks/${task.id}`, {
+    const res = await fetch(`/api/tasks/${task?.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -47,7 +48,7 @@ export default function TaskModal({
     e.preventDefault();
     if (!newComment.trim()) return;
 
-    const res = await fetch(`/api/tasks/${task.id}/comments`, {
+    const res = await fetch(`/api/tasks/${task?.id}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: newComment }),
@@ -66,11 +67,19 @@ export default function TaskModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div
+      className={twMerge(
+        "fixed inset-0 bg-black/50",
+        "flex items-center justify-center p-4 z-50",
+        "transition-all duration-300 ease-in-out",
+        task ? "opacity-100" : "opacity-0 pointer-events-none"
+      )}
+      onClick={() => task && onClose()}
+    >
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold cursor-pointer"
         >
           &times;
         </button>
@@ -106,7 +115,7 @@ export default function TaskModal({
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-black">{task.title}</h2>
+              <h2 className="text-2xl font-bold text-black">{task?.title}</h2>
               <p className="text-gray-500">
                 {editedDescription || "Sin descripción"}
               </p>
@@ -120,9 +129,11 @@ export default function TaskModal({
           )}
 
           <div className="border-t pt-4 mt-4">
-            <h3 className="text-xl font-semibold mb-2 text-black">Comentarios</h3>
+            <h3 className="text-xl font-semibold mb-2 text-black">
+              Comentarios
+            </h3>
             <div className="space-y-4 max-h-[200px] overflow-y-auto">
-              {task.comments?.map((comment) => (
+              {task?.comments?.map((comment) => (
                 <div key={comment.id} className="flex items-start space-x-2">
                   {comment.author.image && (
                     <Image
@@ -134,7 +145,9 @@ export default function TaskModal({
                     />
                   )}
                   <div className="bg-gray-100 p-2 rounded-lg flex-grow">
-                    <div className="font-semibold text-black">{comment.author.name}</div>
+                    <div className="font-semibold text-black">
+                      {comment.author.name}
+                    </div>
                     <p className="text-gray-600 italic">{comment.content}</p>
                   </div>
                 </div>

@@ -170,77 +170,76 @@ export default function ProjectBoard({
   };
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-4xl font-bold mb-8">{project.title}</h1>
-      {/* Formulario para crear nuevas tareas */}
-      <div className="mb-8">
-        <form onSubmit={handleCreateTask} className="flex gap-4">
-          <input
-            type="text"
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            placeholder="Título de la nueva tarea"
-            className="flex-grow px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="px-6 py-2 bg-green-600 text-white font-bold rounded-md hover:bg-green-700"
-          >
-            Añadir Tarea
-          </button>
-        </form>
-      </div>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex space-x-4 overflow-x-auto">
-          {Object.entries(columns).map(([columnId, tasks]) => (
-            <div key={columnId} className="min-w-[300px] flex-shrink-0">
-              <h2 className="text-xl font-semibold mb-4 text-center">
-                {columnId.replace("_", " ")}
-              </h2>
-              <Droppable droppableId={columnId}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={twMerge(
-                      "bg-gray-200 p-4 rounded-lg space-y-4 min-h-[500px]",
-                      columnId === "TO_DO" && "bg-yellow-50"
-                    )}
-                  >
-                    {tasks.map((task, index) => (
-                      <Draggable
-                        key={task.id}
-                        draggableId={task.id}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                          >
-                            <TaskCard task={task} onClick={handleTaskClick} />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          ))}
+    <div className="w-full bg-gray-900">
+      <div className="container mx-auto p-8  text-white min-h-[calc(100vh-64px)]">
+        <h1 className="text-4xl font-bold mb-8">{project.title}</h1>
+        {/* Formulario para crear nuevas tareas */}
+        <div className="mb-8">
+          <form onSubmit={handleCreateTask} className="flex gap-4">
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Título de la nueva tarea"
+              className="flex-grow px-4 py-2 border border-gray-600 rounded-md bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            />
+            <button
+              type="submit"
+              className="px-6 py-2 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 transition-colors"
+            >
+              Añadir Tarea
+            </button>
+          </form>
         </div>
-      </DragDropContext>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="flex space-x-4 overflow-x-auto">
+            {Object.entries(columns).map(([columnId, tasks]) => (
+              <div key={columnId} className="min-w-[300px] flex-shrink-0">
+                <h2 className="text-xl font-semibold mb-4 text-center text-gray-200">
+                  {columnId.replace("_", " ")}
+                </h2>
 
-      {selectedTask && (
-        <TaskModal
-          task={selectedTask}
-          onClose={() => setSelectedTask(null)}
-          onUpdate={handleUpdateTask}
-          onAddComment={handleAddComment}
-        />
-      )}
+                <Droppable droppableId={columnId}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="bg-gray-800 p-4 rounded-lg space-y-4 min-h-[500px]"
+                    >
+                      {tasks.map((task, index) => (
+                        <Draggable
+                          key={task.id}
+                          draggableId={task.id}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className="transition-transform transform hover:scale-105"
+                            >
+                              <TaskCard task={task} onClick={handleTaskClick} />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            ))}
+          </div>
+        </DragDropContext>
+
+          <TaskModal
+            task={selectedTask}
+            onClose={() => setSelectedTask(null)}
+            onUpdate={handleUpdateTask}
+            onAddComment={handleAddComment}
+          />
+      </div>
     </div>
   );
 }

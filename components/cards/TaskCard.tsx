@@ -8,27 +8,28 @@ export default function TaskCard({
   task: Task;
   onClick: (task: Task) => void;
 }) {
-  console.log(task);
   return (
     <div
       className={twMerge(
-        "bg-white p-4 rounded shadow mb-4",
-        "hover:bg-gray-50 cursor-pointer",
-        "border border-transparent hover:border-gray-200",
-        "transition-all duration-150 ease-in-out",
-        task.status === "DONE" && "border-green-300 hover:border-green-400 ",
+        "bg-gray-100 text-white p-4",
+        "rounded-md shadow-md cursor-pointer",
+        "hover:bg-gray-600 transition-colors",
+        "border-2",
+        task.status === "DONE" &&
+          "border-green-300 hover:border-green-400 bg-green-50 hover:bg-green-100",
         task.status === "IN_PROGRESS" &&
-          "border-blue-300 hover:border-blue-400 ",
-        task.status === "TO_DO" && "border-yellow-300 hover:border-yellow-400 "
+          "border-blue-300 hover:border-blue-400 bg-blue-50 hover:bg-blue-100",
+        task.status === "TO_DO" &&
+          "border-yellow-300 hover:border-yellow-400 bg-yellow-50 hover:bg-yellow-100"
       )}
       onClick={() => onClick(task)}
     >
       <h3 className="font-bold text-lg text-black">{task.title}</h3>
       {task.description && (
-        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+        <p className="text-sm text-gray-600 m-0">{task.description}</p>
       )}
       {/* soon user assigned, date, etc. */}
-      <div className="mt-2 flex justify-between text-xs flex-col gap-1">
+      <div className="flex justify-between text-xs flex-col gap-1">
         <span className="text-sm text-gray-500">
           Assigned to: {task.assignedToId ?? ""}
         </span>
