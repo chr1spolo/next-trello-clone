@@ -1,9 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prismaClientDefault } from "@/app/api/auth/[...nextauth]/route";
+import {
+  authOptions,
+  prismaClientDefault,
+} from "@/app/api/auth/[...nextauth]/route";
 
-export async function GET() {
-  const session = await getServerSession();
+export async function GET(req: NextRequest, res: NextResponse) {
+  const session = await getServerSession({
+    req,
+    res,
+    ...authOptions,
+  });
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -23,8 +30,13 @@ export async function GET() {
   return NextResponse.json(userTeams.map((ut) => ut.team));
 }
 
-export async function POST(req: Request) {
-  const session = await getServerSession();
+export async function POST(req: NextRequest, res: NextResponse) {
+  const session = await getServerSession({
+    req,
+    res,
+    ...authOptions,
+  });
+  console.log("Session in POST /api/teams:", session);
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

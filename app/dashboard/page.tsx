@@ -4,10 +4,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
+
+
+interface Project {
+  id: string;
+  title: string;
+}
 
 interface Team {
   id: string;
   name: string;
+  projects: Project[];
 }
 
 export default function DashboardPage() {
@@ -15,6 +23,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
   const [newTeamName, setNewTeamName] = useState("");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -63,6 +73,33 @@ export default function DashboardPage() {
     }
   };
 
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProjectName.trim() || !selectedTeamId) return;
+
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newProjectName, teamId: selectedTeamId }),
+      });
+
+      if (res.ok) {
+        const newProject = await res.json();
+        const updatedTeams = teams.map((team) =>
+          team.id === selectedTeamId
+            ? { ...team, projects: [...team.projects, newProject] }
+            : team
+        );
+        setTeams(updatedTeams);
+        setNewProjectName("");
+        setSelectedTeamId("");
+      }
+    } catch (error) {
+      console.error("Error al crear el proyecto:", error);
+    }
+  };
+
   if (status === "loading" || isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -77,33 +114,87 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-4xl font-bold mb-8">Mis Equipos</h1>
+      <h1 className="text-4xl font-bold mb-8">Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {teams.map((team) => (
           <div
             key={team.id}
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           >
-            <h2 className="text-2xl font-semibold">{team.name}</h2>
-            {/* Aquí puedes añadir un enlace a la página del proyecto del equipo */}
+            <h2 className="text-2xl font-semibold mb-4 text-blue-600">{team.name}</h2>
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium text-blue-400">Proyectos:</h3>
+              {team.projects.length > 0 ? (
+                <ul>
+                  {team.projects.map((project) => (
+                    <li
+                      key={project.id}
+                      className="text-blue-600 hover:underline"
+                    >
+                      <Link href={`/projects/${project.id}`}>
+                        {project.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500 text-sm">
+                  No hay proyectos en este equipo.
+                </p>
+              )}
+            </div>
           </div>
         ))}
+
+        {/* Formulario para crear nuevo equipo */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">Crear Nuevo Equipo</h2>
+          <h2 className="text-xl font-semibold mb-4 text-blue-600">Crear Nuevo Equipo</h2>
           <form onSubmit={handleCreateTeam}>
             <input
               type="text"
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
               placeholder="Nombre del equipo"
-              className="w-full px-4 py-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-blue-400 rounded-md mb-4 focus:outline-none focus:ring focus:ring-blue-500"
             />
             <button
               type="submit"
-              className="w-full px-4 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors duration-300"
+              className="w-full px-4 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700"
             >
-              Crear Equipo
+              Crear
+            </button>
+          </form>
+        </div>
+
+        {/* Formulario para crear nuevo proyecto */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4 text-blue-600">Crear Nuevo Proyecto</h2>
+          <form onSubmit={handleCreateProject}>
+            <input
+              type="text"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              placeholder="Nombre del proyecto"
+              className="w-full px-4 py-2 border border-blue-400 rounded-md mb-4 focus:outline-none focus:ring focus:ring-blue-500 text-blue-400"
+            />
+            <select
+              value={selectedTeamId}
+              onChange={(e) => setSelectedTeamId(e.target.value)}
+              className="w-full px-4 py-2 border border-blue-400 rounded-md mb-4 focus:outline-none focus:ring focus:ring-blue-500 text-blue-400"
+            >
+              <option value="">Selecciona un equipo</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-green-600 text-white font-bold rounded-md hover:bg-green-700"
+            >
+              Crear
             </button>
           </form>
         </div>
