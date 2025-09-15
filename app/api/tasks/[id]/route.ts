@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 export async function PUT(
   req: NextRequest,
-  { params: { id } }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
   res: NextResponse
 ) {
   const session = await getServerSession({
@@ -20,13 +20,18 @@ export async function PUT(
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const { id } = await params;
 
-  const { status } = await req.json();
+  if (!id) {
+    return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
+  }
 
+  const { status, title, description } = await req.json();
+  
   try {
     const updatedTask = await prisma.task.update({
       where: { id },
-      data: { status },
+      data: { status, title, description },
     });
     return NextResponse.json(updatedTask);
   } catch (error) {

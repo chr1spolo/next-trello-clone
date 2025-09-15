@@ -10,17 +10,10 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-
-interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  assignedTo?: string | null;
-  assignedToId?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { twMerge } from "@/utils/twMerge";
+import TaskModal from "@/components/modals/TaskModal";
+import { Task } from "@/types/Task";
+import { Comment } from "@/types/Comment";
 
 interface Project {
   id: string;
@@ -38,6 +31,7 @@ export default function ProjectBoard({
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -65,70 +59,93 @@ export default function ProjectBoard({
     }
   }, [status, projectId]);
 
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim() || !project) return;
 
-   const handleCreateTask = async (e: React.FormEvent) => {
-     e.preventDefault();
-     if (!newTaskTitle.trim() || !project) return;
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTaskTitle, projectId }),
+      });
 
-     try {
-       const res = await fetch("/api/tasks", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ title: newTaskTitle, projectId }),
-       });
+      if (res.ok) {
+        const newTask = await res.json();
+        const updatedProject = {
+          ...project,
+          tasks: [...project.tasks, newTask],
+        };
+        setProject(updatedProject);
+        setNewTaskTitle("");
+      }
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
+  };
 
-       if (res.ok) {
-         const newTask = await res.json();
-         const updatedProject = {
-           ...project,
-           tasks: [...project.tasks, newTask],
-         };
-         setProject(updatedProject);
-         setNewTaskTitle("");
-       }
-     } catch (error) {
-       console.error("Error creating task:", error);
-     }
-   };
+  const onDragEnd = async (result: DropResult) => {
+    const { destination, source, draggableId } = result;
 
-   const onDragEnd = async (result: DropResult) => {
-     const { destination, source, draggableId } = result;
+    if (
+      !destination ||
+      !project ||
+      destination.droppableId === source.droppableId
+    ) {
+      return;
+    }
 
-     if (
-       !destination ||
-       !project ||
-       destination.droppableId === source.droppableId
-     ) {
-       return;
-     }
+    const newStatus = destination.droppableId;
+    const taskId = draggableId;
 
-     const newStatus = destination.droppableId;
-     const taskId = draggableId;
+    // Optimistic update: actualizamos la UI inmediatamente para una mejor UX
+    const updatedTasks = project.tasks.map((task) =>
+      task.id === taskId ? { ...task, status: newStatus } : task
+    );
+    setProject({ ...project, tasks: updatedTasks });
 
-     // Optimistic update: actualizamos la UI inmediatamente para una mejor UX
-     const updatedTasks = project.tasks.map((task) =>
-       task.id === taskId ? { ...task, status: newStatus } : task
-     );
-     setProject({ ...project, tasks: updatedTasks });
+    // Llamamos a la API para persistir el cambio en la base de datos
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
-     // Llamamos a la API para persistir el cambio en la base de datos
-     try {
-       const res = await fetch(`/api/tasks/${taskId}`, {
-         method: "PUT",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ status: newStatus }),
-       });
+      if (!res.ok) {
+        // Si la actualización falla, revertimos el cambio en la UI
+        setProject(project);
+        console.error("Failed to update task status in DB.");
+      }
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      setProject(project); // Revertir el cambio
+    }
+  };
 
-       if (!res.ok) {
-         // Si la actualización falla, revertimos el cambio en la UI
-         setProject(project);
-         console.error("Failed to update task status in DB.");
-       }
-     } catch (error) {
-       console.error("Error updating task status:", error);
-       setProject(project); // Revertir el cambio
-     }
-   };
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+  };
+
+  const handleUpdateTask = (updatedTask: Task) => {
+    if (!project) return;
+    setProject({
+      ...project,
+      tasks: project.tasks.map((t) =>
+        t.id === updatedTask.id ? updatedTask : t
+      ),
+    });
+  };
+
+  const handleAddComment = (newComment: Comment) => {
+    if (!project || !selectedTask) return;
+    const updatedTask = {
+      ...selectedTask,
+      comments: [...(selectedTask.comments || []), newComment],
+    };
+    setSelectedTask(updatedTask); // Actualiza el modal
+    handleUpdateTask(updatedTask); // Actualiza el estado global de la página
+  };
 
   if (isLoading || status === "loading") {
     return (
@@ -185,7 +202,10 @@ export default function ProjectBoard({
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-gray-200 p-4 rounded-lg space-y-4 min-h-[500px]"
+                    className={twMerge(
+                      "bg-gray-200 p-4 rounded-lg space-y-4 min-h-[500px]",
+                      columnId === "TO_DO" && "bg-yellow-50"
+                    )}
                   >
                     {tasks.map((task, index) => (
                       <Draggable
@@ -199,7 +219,7 @@ export default function ProjectBoard({
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                           >
-                            <TaskCard task={task} />
+                            <TaskCard task={task} onClick={handleTaskClick} />
                           </div>
                         )}
                       </Draggable>
@@ -212,6 +232,15 @@ export default function ProjectBoard({
           ))}
         </div>
       </DragDropContext>
+
+      {selectedTask && (
+        <TaskModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={handleUpdateTask}
+          onAddComment={handleAddComment}
+        />
+      )}
     </div>
   );
 }
