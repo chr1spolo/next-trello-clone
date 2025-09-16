@@ -6,11 +6,14 @@ import Link from "next/link";
 import { pusherClient } from "@/lib/pusher-client";
 import { useEffect, useState } from "react";
 import { twMerge } from "@/utils/twMerge";
+import { usePathname, useRouter } from "next/navigation";
 
 
 
 interface Invitation {
+  token: string;
   id: string;
+  inviter: { id: string, name?: string };
   team: {
     name: string;
   };
@@ -21,6 +24,9 @@ export default function Navbar() {
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isInvitationsOpen, setIsInvitationsOpen] = useState(false);
+
+  const router = useRouter();
+  const pathName = usePathname();
 
   // Obtener invitaciones iniciales
   useEffect(() => {
@@ -39,13 +45,15 @@ export default function Navbar() {
   useEffect(() => {
     if (session?.user?.email) {
       const channel = pusherClient.subscribe(`user-${session.user.email}`);
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       channel.bind("new-invitation", (data: any) => {
+        console.log("Nueva invitación recibida:", data);
         setInvitations((prev) => [
           ...prev,
           {
-            id: data.invitation.id,
+            id: data.id,
+            token: data.token,
+            inviter: { id: data.inviterId, name: data.inviterName },
             team: { name: data.teamName },
           },
         ]);
@@ -59,12 +67,33 @@ export default function Navbar() {
 
 
    const handleAcceptInvitation = async (invitationId: string) => {
-     // Lógica para aceptar la invitación (usando el token de la API)
-     // Por ahora, solo la eliminaremos de la UI
-     setInvitations(invitations.filter((inv) => inv.id !== invitationId));
-     alert("Invitación aceptada. ¡Redirigiendo al dashboard!");
-     // TODO: Llamar al endpoint POST de aceptar invitación
+     try {
+       const invitationToAccept = invitations.find(
+         (inv) => inv.id === invitationId
+       );
+       if (!invitationToAccept) return;
+
+       const res = await fetch(`/api/invitations/${invitationToAccept.token}`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+       });
+
+       if (res.ok) {
+         setInvitations(invitations.filter((inv) => inv.id !== invitationId));
+         alert("¡Invitación aceptada! Actualizando su dashboard.");
+         if (pathName === "/dashboard") router.push("/dashboard");
+
+         window.location.reload();
+         setIsInvitationsOpen(false);
+       } else {
+         alert("No se pudo aceptar la invitación.");
+       }
+     } catch (error) {
+       console.error("Error al aceptar la invitación:", error);
+       alert("Ocurrió un error. Inténtalo de nuevo.");
+     }
    };
+
 
   return (
     <nav className="bg-gray-900 text-white p-4 flex justify-between items-center shadow-lg">
@@ -86,7 +115,7 @@ export default function Navbar() {
               </span>
               <div
                 className={twMerge(
-                  "absolute right-0 mt-2 w-64 bg-gray-800 rounded-md shadow-lg py-2 z-20 transition-all duration-500 ease-in-out",
+                  "absolute right-0 mt-2 w-80 bg-gray-800 rounded-md shadow-lg py-2 z-20 transition-all duration-500 ease-in-out",
                   isInvitationsOpen ? "opacity-100" : "opacity-0 pointer-events-none -z-10"
                 )}
               >
@@ -100,8 +129,9 @@ export default function Navbar() {
                     onClick={() => handleAcceptInvitation(inv.id)}
                   >
                     <p className="text-white">
-                      Invited to{" "}
-                      <span className="font-semibold">{inv.team.name}</span>
+                      Has sido invitado a{" "}
+                      <span className="font-semibold underline">{inv.team.name}</span>
+                      {" "}by <span className="font-semibold underline">{inv.inviter.name}</span>
                     </p>
                   </div>
                 ))}

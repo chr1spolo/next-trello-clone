@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
         gt: new Date(), // que no haya expirado
       },
     },
-    include: { team: true },
+    include: { team: true, inviter: true },
   });
 
   return NextResponse.json(invitations);
@@ -84,16 +84,19 @@ export async function POST(req: NextRequest, res: NextResponse) {
         teamId,
         token,
         expiresAt,
+        inviterId: session.user.id,
       },
     });
-    console.log(pusher);
+    
     await pusher.trigger(
       `user-${newInvitation.email}`,
       "new-invitation",
       {
         teamName: team.name,
         token: newInvitation.token,
+        inviterId: session.user.id,
         inviterName: session.user.name,
+        id: newInvitation.id,
       }
     );
 

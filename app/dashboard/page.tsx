@@ -153,7 +153,7 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-medium text-gray-400">
                   Proyectos:
                 </h3>
-                {team.projects.length > 0 ? (
+                {team.projects?.length > 0 ? (
                   <ul>
                     {team.projects.map((project) => (
                       <li

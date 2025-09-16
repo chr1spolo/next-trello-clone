@@ -11,7 +11,6 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -40,16 +39,18 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
   userTeams     UserTeam[]
-  Task Task[]
-  Comment Comment[]
+  Task          Task[]
+  Comment       Comment[]
+
+  Invitation Invitation[]
 }
 
 model VerificationToken {
@@ -65,50 +66,50 @@ model Team {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  members   UserTeam[]
-  projects  Project[]
+
+  members  UserTeam[]
+  projects Project[]
 
   invitations Invitation[]
 }
 
 model UserTeam {
-  id        String   @id @default(cuid())
-  userId    String
-  teamId    String
-  role      String   @default("MEMBER")
-  
-  user      User     @relation(fields: [userId], references: [id])
-  team      Team     @relation(fields: [teamId], references: [id])
-  
+  id     String @id @default(cuid())
+  userId String
+  teamId String
+  role   String @default("MEMBER")
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+
   @@unique([userId, teamId])
 }
 
 model Project {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String?
   teamId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  team        Team      @relation(fields: [teamId], references: [id])
-  tasks       Task[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team  Team   @relation(fields: [teamId], references: [id])
+  tasks Task[]
 }
 
 model Task {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  status      String    @default("TO_DO") // TO_DO, IN_PROGRESS, DONE
-  projectId   String
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  status       String   @default("TO_DO") // TO_DO, IN_PROGRESS, DONE
+  projectId    String
   assignedToId String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  project     Project   @relation(fields: [projectId], references: [id])
-  assignedTo  User?     @relation(fields: [assignedToId], references: [id])
-  comments    Comment[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project    Project   @relation(fields: [projectId], references: [id])
+  assignedTo User?     @relation(fields: [assignedToId], references: [id])
+  comments   Comment[]
 }
 
 model Comment {
@@ -118,20 +119,21 @@ model Comment {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  task      Task     @relation(fields: [taskId], references: [id])
-  author    User     @relation(fields: [authorId], references: [id])
-}
 
+  task   Task @relation(fields: [taskId], references: [id])
+  author User @relation(fields: [authorId], references: [id])
+}
 
 model Invitation {
   id        String   @id @default(cuid())
   email     String
   teamId    String
+  inviterId String
   token     String   @unique
   status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team    Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  inviter User @relation(fields: [inviterId], references: [id])
 }
