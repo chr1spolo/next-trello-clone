@@ -1,10 +1,11 @@
-// app/dashboard/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import InviteMemberModal from "@/components/modals/InviteMemberModal";
+
 
 interface Project {
   id: string;
@@ -25,6 +26,13 @@ export default function DashboardPage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -99,6 +107,18 @@ export default function DashboardPage() {
     }
   };
 
+
+  const handleOpenInviteModal = (team: { id: string; name: string }) => {
+    setSelectedTeam(team);
+    setIsInviteModalOpen(true);
+  };
+
+  const handleCloseInviteModal = () => {
+    setSelectedTeam(null);
+    setIsInviteModalOpen(false);
+  };
+
+
   if (status === "loading" || isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -123,6 +143,12 @@ export default function DashboardPage() {
               className="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
             >
               <h2 className="text-2xl font-semibold mb-4">{team.name}</h2>
+              <button
+                onClick={() => handleOpenInviteModal(team)}
+                className="text-blue-400 hover:underline text-sm mb-4 cursor-pointer"
+              >
+                Invitar Miembro
+              </button>
               <div className="space-y-2">
                 <h3 className="text-lg font-medium text-gray-400">
                   Proyectos:
@@ -206,6 +232,14 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      
+      <InviteMemberModal
+        teamId={selectedTeam?.id}
+        teamName={selectedTeam?.name}
+        onClose={handleCloseInviteModal}
+      />
+      
     </div>
   );
 }

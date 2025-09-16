@@ -72,7 +72,7 @@ export default function TaskModal({
         "fixed inset-0 bg-black/50",
         "flex items-center justify-center p-4 z-50",
         "transition-all duration-300 ease-in-out",
-        task ? "opacity-100" : "opacity-0 pointer-events-none"
+        task ? "opacity-100" : "opacity-0 pointer-events-none -z-10"
       )}
       onClick={() => task && onClose()}
     >

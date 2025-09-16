@@ -68,6 +68,8 @@ model Team {
   
   members   UserTeam[]
   projects  Project[]
+
+  invitations Invitation[]
 }
 
 model UserTeam {
@@ -119,4 +121,17 @@ model Comment {
   
   task      Task     @relation(fields: [taskId], references: [id])
   author    User     @relation(fields: [authorId], references: [id])
+}
+
+
+model Invitation {
+  id        String   @id @default(cuid())
+  email     String
+  teamId    String
+  token     String   @unique
+  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }
