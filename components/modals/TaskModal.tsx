@@ -29,6 +29,7 @@ export default function TaskModal({
   );
   const [newComment, setNewComment] = useState("");
   const [assignedTo, setAssignedTo] = useState(task?.assignedToId || "");
+  const [comments, setComments] = useState<Comment[]>(task?.comments || []);
 
   const handleUpdate = async () => {
     const res = await fetch(`/api/tasks/${task?.id}`, {
@@ -70,13 +71,17 @@ export default function TaskModal({
   };
 
   useEffect(() => {
-
     if (task) {
       setEditedTitle(task.title);
       setEditedDescription(task.description || "");
       setAssignedTo(task.assignedToId || "");
+      setComments(task.comments || []);
+    } else {
+      setIsEditing(false);
+      setEditedTitle("");
+      setEditedDescription("");
+      setAssignedTo("");
     }
-
   }, [task]);
 
   return (
@@ -89,7 +94,10 @@ export default function TaskModal({
       )}
       onClick={() => task && onClose()}
     >
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold cursor-pointer"
@@ -146,14 +154,17 @@ export default function TaskModal({
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-black">{task?.title}</h2>
+              <h2 className="text-2xl font-bold text-black">{editedTitle}</h2>
               <p className="text-gray-500">
                 {editedDescription || "Sin descripción"}
               </p>
               <div className="mt-2">
                 <span className="text-sm text-gray-400">Asignado a: </span>
                 {assignedTo ? (
-                  <span className="text-black">{members.find((m) => m.userId === assignedTo)?.user.name || "Desconocido"}</span>
+                  <span className="text-black">
+                    {members.find((m) => m.userId === assignedTo)?.user.name ||
+                      "Desconocido"}
+                  </span>
                 ) : (
                   <span className="text-gray-500">Sin asignar</span>
                 )}
@@ -172,10 +183,10 @@ export default function TaskModal({
               Comentarios
             </h3>
             <div className="space-y-4 max-h-[200px] overflow-y-auto">
-              {task?.comments?.map((comment) => (
-                <div key={comment.id} className="flex items-start space-x-2">
+              {comments?.map((comment) => (
+                <div key={comment.id} className="flex items-center space-x-2">
                   {comment.author.image && (
-                    <Image
+                    <img
                       src={comment.author.image}
                       alt="Avatar"
                       width={24}
@@ -183,7 +194,7 @@ export default function TaskModal({
                       className="rounded-full"
                     />
                   )}
-                  <div className="bg-gray-100 p-2 rounded-lg flex-grow">
+                  <div className="bg-gray-200 p-2 rounded-lg flex-grow">
                     <div className="font-semibold text-black">
                       {comment.author.name}
                     </div>

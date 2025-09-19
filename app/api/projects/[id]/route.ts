@@ -44,6 +44,10 @@ export async function GET(
         },
         include: {
           assignedTo: true,
+          comments: {
+            include: { author: true },
+            orderBy: { createdAt: "asc" }, // order comments by creation date
+          }
         }
       },
     },

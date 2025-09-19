@@ -12,6 +12,7 @@ import {
 } from "@hello-pangea/dnd";
 import TaskModal from "@/components/modals/TaskModal";
 import { Task, Comment, Project } from "@/types/index";
+import { socket } from "@/socket";
 
 export default function ProjectBoard({
   params,
@@ -22,9 +23,13 @@ export default function ProjectBoard({
   const { data: session, status } = useSession();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [transport, setTransport] = useState<string>("N/A");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -40,6 +45,7 @@ export default function ProjectBoard({
           if (res.ok) {
             const data = await res.json();
             setProject(data);
+            setTasks(data.tasks || []);
           }
         } catch (error) {
           console.error("Error fetching project:", error);
@@ -50,6 +56,62 @@ export default function ProjectBoard({
       fetchProject();
     }
   }, [status, projectId]);
+
+  useEffect(() => {
+    if (socket.connected) {
+      onConnect();
+    }
+
+    function onConnect() {
+      setIsConnected(true);
+      setTransport(socket.io.engine.transport.name);
+
+      socket.io.engine.on("upgrade", (transport) => {
+        setTransport(transport.name);
+      });
+
+      socket.on("update-task", (updatedTaskString: string) => {
+        console.log("Received updated task via WebSocket2:", updatedTaskString);
+        if (!project) {
+          console.warn("Project is not loaded yet. Cannot update task.");
+          return;
+        }
+        try {
+          if (!updatedTaskString) throw new Error("Invalid task data");
+          let updatedTask: Task;
+          if (typeof updatedTaskString === "string") {
+            updatedTask = JSON.parse(updatedTaskString);
+          } else {
+            updatedTask = updatedTaskString;
+          }
+          setTasks((prevTasks) =>
+            prevTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+          );
+
+          if (selectedTask && selectedTask.id === updatedTask.id) {
+            setSelectedTask(updatedTask);
+          }
+        } catch (error) {
+          console.error("Error updating task:", error);
+        }
+      });
+    }
+
+    function onDisconnect() {
+      setIsConnected(false);
+      setTransport("N/A");
+    }
+
+    if (!socket.hasListeners("connect")) {
+      socket.on("connect", onConnect);
+      socket.on("disconnect", onDisconnect);
+    }
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+    };
+  }, [project]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +128,7 @@ export default function ProjectBoard({
         const newTask = await res.json();
         const updatedProject = {
           ...project,
-          tasks: [...project.tasks, newTask],
+          tasks: [...tasks, newTask],
         };
         setProject(updatedProject);
         setNewTaskTitle("");
@@ -91,10 +153,10 @@ export default function ProjectBoard({
     const taskId = draggableId;
 
     // Optimistic update: actualizamos la UI inmediatamente para una mejor UX
-    const updatedTasks = project.tasks.map((task) =>
+    const updatedTasks = tasks.map((task) =>
       task.id === taskId ? { ...task, status: newStatus } : task
     );
-    setProject({ ...project, tasks: updatedTasks });
+    setTasks(updatedTasks);
 
     // Llamamos a la API para persistir el cambio en la base de datos
     try {
@@ -108,6 +170,11 @@ export default function ProjectBoard({
         // Si la actualización falla, revertimos el cambio en la UI
         setProject(project);
         console.error("Failed to update task status in DB.");
+      } else {
+        const updatedTask = await res.json();
+        console.log("Task status updated:", updatedTask);
+        // Emitimos el cambio a través de WebSocket para notificar a otros clientes
+        socket.emit("update-task", JSON.stringify(updatedTask));
       }
     } catch (error) {
       console.error("Error updating task status:", error);
@@ -121,12 +188,11 @@ export default function ProjectBoard({
 
   const handleUpdateTask = (updatedTask: Task) => {
     if (!project) return;
-    setProject({
-      ...project,
-      tasks: project.tasks.map((t) =>
-        t.id === updatedTask.id ? updatedTask : t
-      ),
-    });
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+    );
+    // Emitimos el cambio a través de WebSocket para notificar a otros clientes
+    socket.emit("update-task", JSON.stringify(updatedTask));
   };
 
   const handleAddComment = (newComment: Comment) => {
@@ -135,8 +201,8 @@ export default function ProjectBoard({
       ...selectedTask,
       comments: [...(selectedTask.comments || []), newComment],
     };
-    setSelectedTask(updatedTask); // Actualiza el modal
-    handleUpdateTask(updatedTask); // Actualiza el estado global de la página
+    setSelectedTask(updatedTask);
+    handleUpdateTask(updatedTask);
   };
 
   if (isLoading || status === "loading") {
@@ -156,15 +222,17 @@ export default function ProjectBoard({
   }
 
   const columns = {
-    TO_DO: project.tasks.filter((t) => t.status === "TO_DO"),
-    IN_PROGRESS: project.tasks.filter((t) => t.status === "IN_PROGRESS"),
-    DONE: project.tasks.filter((t) => t.status === "DONE"),
+    TO_DO: tasks.filter((t) => t.status === "TO_DO"),
+    IN_PROGRESS: tasks.filter((t) => t.status === "IN_PROGRESS"),
+    DONE: tasks.filter((t) => t.status === "DONE"),
   };
 
   return (
     <div className="w-full bg-gray-900">
       <div className="container mx-auto p-8  text-white min-h-[calc(100vh-64px)]">
         <h1 className="text-4xl font-bold mb-8">{project.title}</h1>
+        <p>Status: {isConnected ? "connected" : "disconnected"}</p>
+        <p>Transport: {transport}</p>
         {/* Formulario para crear nuevas tareas */}
         <div className="mb-8">
           <form onSubmit={handleCreateTask} className="flex gap-4">
