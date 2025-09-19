@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { Task } from "@/types/Task";
-import { Comment } from "@/types/Comment";
+import { User, Task, Comment, Member } from "@/types/index";
 import { twMerge } from "@/utils/twMerge";
 
 interface TaskModalProps {
   task: Task | null;
+  members: Member[];
   onClose: () => void;
   onUpdate: (updatedTask: Task) => void;
   onAddComment: (newComment: Comment) => void;
@@ -16,6 +16,7 @@ interface TaskModalProps {
 
 export default function TaskModal({
   task,
+  members,
   onClose,
   onUpdate,
   onAddComment,
@@ -27,6 +28,7 @@ export default function TaskModal({
     task?.description || ""
   );
   const [newComment, setNewComment] = useState("");
+  const [assignedTo, setAssignedTo] = useState(task?.assignedToId || "");
 
   const handleUpdate = async () => {
     const res = await fetch(`/api/tasks/${task?.id}`, {
@@ -35,6 +37,7 @@ export default function TaskModal({
       body: JSON.stringify({
         title: editedTitle,
         description: editedDescription,
+        assignedToId: assignedTo || null,
       }),
     });
     if (res.ok) {
@@ -66,6 +69,16 @@ export default function TaskModal({
     }
   };
 
+  useEffect(() => {
+
+    if (task) {
+      setEditedTitle(task.title);
+      setEditedDescription(task.description || "");
+      setAssignedTo(task.assignedToId || "");
+    }
+
+  }, [task]);
+
   return (
     <div
       className={twMerge(
@@ -76,7 +89,7 @@ export default function TaskModal({
       )}
       onClick={() => task && onClose()}
     >
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-lg font-bold cursor-pointer"
@@ -98,6 +111,24 @@ export default function TaskModal({
                 placeholder="Añadir una descripción..."
                 className="w-full h-24 border rounded-md p-2 focus:outline-none text-black border-gray-300 resize-none"
               />
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Asignar a:
+                </label>
+                <select
+                  value={assignedTo || ""}
+                  onChange={(e) => setAssignedTo(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none"
+                >
+                  <option value="">Sin asignar</option>
+                  {members.map((member) => (
+                    <option key={member.userId} value={member.userId}>
+                      {member.user.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={handleUpdate}
@@ -119,6 +150,14 @@ export default function TaskModal({
               <p className="text-gray-500">
                 {editedDescription || "Sin descripción"}
               </p>
+              <div className="mt-2">
+                <span className="text-sm text-gray-400">Asignado a: </span>
+                {assignedTo ? (
+                  <span className="text-black">{members.find((m) => m.userId === assignedTo)?.user.name || "Desconocido"}</span>
+                ) : (
+                  <span className="text-gray-500">Sin asignar</span>
+                )}
+              </div>
               <button
                 onClick={() => setIsEditing(true)}
                 className="text-blue-600 hover:underline text-left"

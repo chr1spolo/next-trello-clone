@@ -10,16 +10,8 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { twMerge } from "@/utils/twMerge";
 import TaskModal from "@/components/modals/TaskModal";
-import { Task } from "@/types/Task";
-import { Comment } from "@/types/Comment";
-
-interface Project {
-  id: string;
-  title: string;
-  tasks: Task[];
-}
+import { Task, Comment, Project } from "@/types/index";
 
 export default function ProjectBoard({
   params,
@@ -219,7 +211,11 @@ export default function ProjectBoard({
                               {...provided.dragHandleProps}
                               className="transition-transform transform hover:scale-105"
                             >
-                              <TaskCard task={task} onClick={handleTaskClick} />
+                              <TaskCard
+                                task={task}
+                                onClick={handleTaskClick}
+                                members={project.team.members}
+                              />
                             </div>
                           )}
                         </Draggable>
@@ -233,12 +229,13 @@ export default function ProjectBoard({
           </div>
         </DragDropContext>
 
-          <TaskModal
-            task={selectedTask}
-            onClose={() => setSelectedTask(null)}
-            onUpdate={handleUpdateTask}
-            onAddComment={handleAddComment}
-          />
+        <TaskModal
+          task={selectedTask}
+          members={project.team.members}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={handleUpdateTask}
+          onAddComment={handleAddComment}
+        />
       </div>
     </div>
   );

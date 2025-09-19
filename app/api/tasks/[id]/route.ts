@@ -26,12 +26,13 @@ export async function PUT(
     return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
   }
 
-  const { status, title, description } = await req.json();
+  const { status, title, description, assignedToId } = await req.json();
   
   try {
     const updatedTask = await prisma.task.update({
       where: { id },
-      data: { status, title, description },
+      data: { status, title, description, assignedToId },
+      include: { assignedTo: true, },
     });
     return NextResponse.json(updatedTask);
   } catch (error) {

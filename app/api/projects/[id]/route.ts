@@ -33,13 +33,18 @@ export async function GET(
     include: {
       team: {
         include: {
-          members: true,
+          members: {
+            include: { user: true },
+          },
         },
       },
       tasks: {
         orderBy: {
           createdAt: "asc", // order tasks by creation date
         },
+        include: {
+          assignedTo: true,
+        }
       },
     },
   });

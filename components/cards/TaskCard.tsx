@@ -1,13 +1,16 @@
-import { Task } from "@/types/Task";
+import { Member, Task } from "@/types/index";
 import { twMerge } from "@/utils/twMerge";
 
 export default function TaskCard({
   task,
+  members,
   onClick,
 }: {
   task: Task;
+  members: Member[];
   onClick: (task: Task) => void;
 }) {
+  const memberInfo = members.find((m) => m.userId === task.assignedToId);
   return (
     <div
       className={twMerge(
@@ -30,8 +33,8 @@ export default function TaskCard({
       )}
       {/* soon user assigned, date, etc. */}
       <div className="flex justify-between text-xs flex-col gap-1">
-        <span className="text-sm text-gray-500">
-          Assigned to: {task.assignedToId ?? ""}
+        <span className="text-sm text-gray-500 font-bold">
+          Assigned to: {memberInfo?.user.name ?? ""}
         </span>
         <span className="text-xs text-gray-500">
           Created:{" "}
