@@ -10,11 +10,9 @@ const prisma = new PrismaClient();
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
-  res: NextResponse,
 ) {
   const session = await getServerSession({
       req,
-      res,
       ...authOptions,
     });
   if (!session || !session.user) {

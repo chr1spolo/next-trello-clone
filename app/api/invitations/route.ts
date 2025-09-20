@@ -12,10 +12,9 @@ export const runtime = "nodejs";
 
 
 
-export async function GET(req: NextRequest, res: NextResponse) {
+export async function GET(req: NextRequest) {
   const session = await getServerSession({
     req,
-    res,
     ...authOptions,
   });
   if (!session || !session.user || !session.user.email) {
@@ -36,10 +35,9 @@ export async function GET(req: NextRequest, res: NextResponse) {
   return NextResponse.json(invitations);
 }
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
   const session = await getServerSession({
     req,
-    res,
     ...authOptions,
   });
   
