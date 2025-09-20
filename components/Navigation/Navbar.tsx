@@ -1,19 +1,18 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { pusherClient } from "@/lib/pusher-client";
 import { useEffect, useState } from "react";
 import { twMerge } from "@/utils/twMerge";
 import { usePathname, useRouter } from "next/navigation";
-
-
+import SignInModal from "@/components/modals/SignInModal";
 
 interface Invitation {
   token: string;
   id: string;
-  inviter: { id: string, name?: string };
+  inviter: { id: string; name?: string };
   team: {
     name: string;
   };
@@ -24,6 +23,7 @@ export default function Navbar() {
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isInvitationsOpen, setIsInvitationsOpen] = useState(false);
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
 
   const router = useRouter();
   const pathName = usePathname();
@@ -65,106 +65,112 @@ export default function Navbar() {
     }
   }, [session]);
 
+  const handleAcceptInvitation = async (invitationId: string) => {
+    try {
+      const invitationToAccept = invitations.find(
+        (inv) => inv.id === invitationId
+      );
+      if (!invitationToAccept) return;
 
-   const handleAcceptInvitation = async (invitationId: string) => {
-     try {
-       const invitationToAccept = invitations.find(
-         (inv) => inv.id === invitationId
-       );
-       if (!invitationToAccept) return;
+      const res = await fetch(`/api/invitations/${invitationToAccept.token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
 
-       const res = await fetch(`/api/invitations/${invitationToAccept.token}`, {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-       });
+      if (res.ok) {
+        setInvitations(invitations.filter((inv) => inv.id !== invitationId));
+        alert("¡Invitación aceptada! Actualizando su dashboard.");
+        if (pathName === "/dashboard") router.push("/dashboard");
 
-       if (res.ok) {
-         setInvitations(invitations.filter((inv) => inv.id !== invitationId));
-         alert("¡Invitación aceptada! Actualizando su dashboard.");
-         if (pathName === "/dashboard") router.push("/dashboard");
-
-         window.location.reload();
-         setIsInvitationsOpen(false);
-       } else {
-         alert("No se pudo aceptar la invitación.");
-       }
-     } catch (error) {
-       console.error("Error al aceptar la invitación:", error);
-       alert("Ocurrió un error. Inténtalo de nuevo.");
-     }
-   };
-
+        window.location.reload();
+        setIsInvitationsOpen(false);
+      } else {
+        alert("No se pudo aceptar la invitación.");
+      }
+    } catch (error) {
+      console.error("Error al aceptar la invitación:", error);
+      alert("Ocurrió un error. Inténtalo de nuevo.");
+    }
+  };
 
   return (
-    <nav className="bg-gray-900 text-white p-4 flex justify-between items-center shadow-lg">
-      <Link
-        href="/dashboard"
-        className="text-2xl font-bold hover:text-gray-300 transition-colors"
-      >
-        Trello Clone
-      </Link>
-      {session && session.user ? (
-        <div className="flex items-center space-x-4">
-          {invitations.length > 0 && (
-            <div className="relative">
-              <span
-                className="text-yellow-400 cursor-pointer"
-                onClick={() => setIsInvitationsOpen(!isInvitationsOpen)}
-              >
-                📩 ({invitations.length})
-              </span>
-              <div
-                className={twMerge(
-                  "absolute right-0 mt-2 w-80 bg-gray-800 rounded-md shadow-lg py-2 z-20 transition-all duration-500 ease-in-out",
-                  isInvitationsOpen ? "opacity-100" : "opacity-0 pointer-events-none -z-10"
-                )}
-              >
-                <p className="px-4 py-2 text-sm text-gray-400">
-                  Invitaciones pendientes:
-                </p>
-                {invitations.map((inv) => (
-                  <div
-                    key={inv.id}
-                    className="px-4 py-2 hover:bg-gray-700 transition-colors cursor-pointer"
-                    onClick={() => handleAcceptInvitation(inv.id)}
-                  >
-                    <p className="text-white">
-                      Has sido invitado a{" "}
-                      <span className="font-semibold underline">{inv.team.name}</span>
-                      {" "}by <span className="font-semibold underline">{inv.inviter.name}</span>
-                    </p>
-                  </div>
-                ))}
+    <>
+      <nav className="bg-white text-black p-4 flex items-center rounded-2xl justify-between">
+        <h2 className="text-lg font-semibold">Dashboard</h2>
+        {session && session.user ? (
+          <div className="flex items-center space-x-4">
+            {invitations.length > 0 && (
+              <div className="relative">
+                <span
+                  className="text-yellow-400 cursor-pointer"
+                  onClick={() => setIsInvitationsOpen(!isInvitationsOpen)}
+                >
+                  📩 ({invitations.length})
+                </span>
+                <div
+                  className={twMerge(
+                    "absolute right-0 mt-2 w-80 bg-gray-800 rounded-md shadow-lg py-2 z-20 transition-all duration-500 ease-in-out",
+                    isInvitationsOpen
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none -z-10"
+                  )}
+                >
+                  <p className="px-4 py-2 text-sm text-gray-400">
+                    Invitaciones pendientes:
+                  </p>
+                  {invitations.map((inv) => (
+                    <div
+                      key={inv.id}
+                      className="px-4 py-2 hover:bg-gray-700 transition-colors cursor-pointer"
+                      onClick={() => handleAcceptInvitation(inv.id)}
+                    >
+                      <p className="text-white">
+                        Has sido invitado a{" "}
+                        <span className="font-semibold underline">
+                          {inv.team.name}
+                        </span>{" "}
+                        by{" "}
+                        <span className="font-semibold underline">
+                          {inv.inviter.name}
+                        </span>
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          <div className="flex items-center space-x-2">
-            {session.user.image && (
-              <Image
-                src={session.user.image}
-                alt="Foto de perfil"
-                width={32}
-                height={32}
-                className="rounded-full ring-2 ring-white"
-              />
             )}
-            <span>{session.user.name}</span>
+            <div className="flex items-center space-x-2">
+              {session.user.image && (
+                <Image
+                  src={session.user.image}
+                  alt="Foto de perfil"
+                  width={32}
+                  height={32}
+                  className="rounded-full ring-2 ring-white"
+                />
+              )}
+              <span>{session.user.name}</span>
+            </div>
+            <button
+              onClick={() => signOut()}
+              className="px-3 py-1 bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+            >
+              Cerrar Sesión
+            </button>
           </div>
+        ) : (
           <button
-            onClick={() => signOut()}
-            className="px-3 py-1 bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+            onClick={() => setIsSignInModalOpen(true)}
+            className="px-3 py-1 bg-blue-500 rounded-md hover:bg-blue-700 transition-colors text-white hover:cursor-pointer"
           >
-            Cerrar Sesión
+            Iniciar Sesión
           </button>
-        </div>
-      ) : (
-        <Link
-          href="/"
-          className="px-3 py-1 bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Iniciar Sesión
-        </Link>
-      )}
-    </nav>
+        )}
+      </nav>
+      <SignInModal
+        show={isSignInModalOpen}
+        onClose={() => setIsSignInModalOpen(false)}
+      />
+    </>
   );
 }

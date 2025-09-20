@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Allan } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/providers/SessionProvider";
 import Navbar from "@/components/Navigation/Navbar";
+import SideBar from "@/components/Navigation/SideBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,6 +12,13 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+
+const allan = Allan({
+  variable: "--font-allan",
+  weight: ["400", "700"],
   subsets: ["latin"],
 });
 
@@ -27,11 +35,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${allan.variable} antialiased`}
       >
         <SessionProvider>
-          <Navbar />
-          <main className="min-h-[calc(100vh-64px)]">{children}</main>
+          <div className="flex h-screen bg-white/88 p-4 gap-4">
+            <SideBar />
+            <div className="flex flex-1 flex-col gap-4">
+              <Navbar />
+              <main className="flex-1 overflow-y-hidden h-[calc(100vh-112px)]">
+                {children}
+              </main>
+            </div>
+          </div>
         </SessionProvider>
       </body>
     </html>

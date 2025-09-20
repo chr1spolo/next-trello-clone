@@ -1,8 +1,10 @@
 "use client";
 
+import Button from "@/components/ui/Buttons/Default";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { BiLogInCircle } from "react-icons/bi";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -23,15 +25,10 @@ export default function Home() {
   }
 
  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-900 text-white">
-      <h1 className="text-4xl font-bold mb-4">Bienvenido a Trello Clone</h1>
-      <p className="text-xl mb-8">No has iniciado sesión</p>
-      <button
-        onClick={() => signIn("google")}
-        className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Iniciar Sesión con Google
-      </button>
-    </main>
-  );
+   <main className="flex flex-col items-center justify-center p-4 bg-white text-black rounded-2xl">
+     <h1 className="text-4xl font-bold">
+       Bienvenido a <span className="font-allan font-normal">TaskKy</span>
+     </h1>
+   </main>
+ );
 }
