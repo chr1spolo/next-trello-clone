@@ -228,7 +228,7 @@ export default function ProjectBoard({
   };
 
   return (
-    <div className="w-full bg-gray-900">
+    <div className="w-full bg-white rounded-2xl">
       <div className="container mx-auto p-8  text-white min-h-[calc(100vh-64px)]">
         <h1 className="text-4xl font-bold mb-8">{project.title}</h1>
         <p>Status: {isConnected ? "connected" : "disconnected"}</p>

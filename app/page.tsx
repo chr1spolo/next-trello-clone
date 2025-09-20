@@ -25,7 +25,7 @@ export default function Home() {
   }
 
  return (
-   <main className="flex flex-col items-center justify-center p-4 bg-white text-black rounded-2xl">
+   <main className="flex flex-col items-center justify-center p-4 bg-transparent text-black rounded-2xl">
      <h1 className="text-4xl font-bold">
        Bienvenido a <span className="font-allan font-normal">TaskKy</span>
      </h1>

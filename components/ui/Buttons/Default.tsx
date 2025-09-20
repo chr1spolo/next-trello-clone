@@ -11,7 +11,7 @@ export interface ButtonProps
 }
 
 const defaultClass =
-  "px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center cursor-pointer group duration-300 ease-in-out";
+  "px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center cursor-pointer group duration-300 ease-in-out font-main";
 
 const button = cva(defaultClass, {
   variants: {

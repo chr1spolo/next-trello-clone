@@ -15,7 +15,10 @@ export default function SignInModal({ show, onClose }: SignInModalProps) {
 
   const loginTrigger = (provider: string) => () => {
     setIsLoading(true);
-    signIn(provider).catch(() => {
+    signIn(provider, {
+      redirect: true,
+      callbackUrl: "/dashboard",
+    }).catch(() => {
       setIsLoading(false);
       onClose();
     });

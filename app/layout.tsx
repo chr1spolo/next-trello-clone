@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Allan } from "next/font/google";
+import { Geist, Geist_Mono, Allan, Merriweather } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/providers/SessionProvider";
 import Navbar from "@/components/Navigation/Navbar";
@@ -15,10 +15,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
 const allan = Allan({
   variable: "--font-allan",
   weight: ["400", "700"],
+  subsets: ["latin"],
+});
+
+const merriweather = Merriweather({
+  variable: "--font-main",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
 });
 
@@ -35,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${allan.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${allan.variable} ${merriweather.variable} antialiased`}
       >
         <SessionProvider>
           <div className="flex h-screen bg-white/88 p-4 gap-4">

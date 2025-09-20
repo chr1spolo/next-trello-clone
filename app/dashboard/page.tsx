@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import InviteMemberModal from "@/components/modals/InviteMemberModal";
+import FloatButton from "@/components/ui/Buttons/FloatButton";
 
 
 interface Project {
@@ -132,114 +133,16 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <div className="container mx-auto p-8 text-white min-h-[calc(100vh-64px)] w-full">
-        <h1 className="text-4xl font-bold mb-8">Dashboard</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teams.map((team) => (
-            <div
-              key={team.id}
-              className="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
-            >
-              <h2 className="text-2xl font-semibold mb-4">{team.name}</h2>
-              <button
-                onClick={() => handleOpenInviteModal(team)}
-                className="text-blue-400 hover:underline text-sm mb-4 cursor-pointer"
-              >
-                Invitar Miembro
-              </button>
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium text-gray-400">
-                  Proyectos:
-                </h3>
-                {team.projects?.length > 0 ? (
-                  <ul>
-                    {team.projects.map((project) => (
-                      <li
-                        key={project.id}
-                        className="text-blue-500 hover:text-blue-300 hover:underline transition-colors"
-                      >
-                        <Link href={`/projects/${project.id}`}>
-                          {project.title}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500 text-sm">
-                    No hay proyectos en este equipo.
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4 text-gray-200">
-              Crear Nuevo Equipo
-            </h2>
-
-            <form onSubmit={handleCreateTeam}>
-              <input
-                type="text"
-                value={newTeamName}
-                onChange={(e) => setNewTeamName(e.target.value)}
-                placeholder="Nombre del equipo"
-                className="w-full px-4 py-2 border border-gray-600 rounded-md mb-4 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              />
-              <button
-                type="submit"
-                className="w-full px-4 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
-              >
-                Crear
-              </button>
-            </form>
-          </div>
-
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4 text-gray-200">
-              Crear Nuevo Proyecto
-            </h2>
-
-            <form onSubmit={handleCreateProject}>
-              <input
-                type="text"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder="Nombre del proyecto"
-                className="w-full px-4 py-2 border border-gray-600 rounded-md mb-4 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              />
-              <select
-                value={selectedTeamId}
-                onChange={(e) => setSelectedTeamId(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-600 rounded-md mb-4 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              >
-                <option value="">Selecciona un equipo</option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="w-full px-4 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
-              >
-                Crear
-              </button>
-            </form>
-          </div>
-        </div>
+    <div className="min-h-screen bg-transparent rounded-2xl">
+      <div className="container mx-auto p-0 text-white min-h-[calc(100vh-64px)] w-full">
+        <FloatButton />
       </div>
 
-      
       <InviteMemberModal
         teamId={selectedTeam?.id}
         teamName={selectedTeam?.name}
         onClose={handleCloseInviteModal}
       />
-      
     </div>
   );
 }
