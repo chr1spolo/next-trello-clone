@@ -8,10 +8,9 @@ import {
 
 export const runtime = "nodejs";
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
   const session = await getServerSession({
     req,
-    res,
     ...authOptions,
   });
 

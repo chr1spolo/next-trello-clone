@@ -7,19 +7,17 @@ export const runtime = "nodejs";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { token: string } },
-  res: NextResponse
+  { params }: { params: Promise<{ token: string }> },
 ) {
   const session = await getServerSession({
     req,
-    res,
     ...authOptions,
   });
   if (!session || !session.user || !session.user.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { token } = params;
+  const { token } = await params;
 
   const invitation = await prisma.invitation.findUnique({
     where: { token },

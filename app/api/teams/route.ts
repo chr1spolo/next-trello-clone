@@ -5,10 +5,9 @@ import {
   prismaClientDefault,
 } from "@/app/api/auth/[...nextauth]/route";
 
-export async function GET(req: NextRequest, res: NextResponse) {
+export async function GET(req: NextRequest) {
   const session = await getServerSession({
     req,
-    res,
     ...authOptions,
   });
   if (!session || !session.user) {
@@ -30,10 +29,9 @@ export async function GET(req: NextRequest, res: NextResponse) {
   return NextResponse.json(userTeams.map((ut) => ut.team));
 }
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
   const session = await getServerSession({
     req,
-    res,
     ...authOptions,
   });
   if (!session || !session.user) {

@@ -5,10 +5,9 @@ import {
   prismaClientDefault as prisma,
 } from "@/app/api/auth/[...nextauth]/route";
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
   const session = await getServerSession({
     req,
-    res,
     ...authOptions,
   });
   if (!session || !session.user) {

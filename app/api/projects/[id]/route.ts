@@ -7,12 +7,10 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-  res: NextResponse
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession({
     req,
-    res,
     ...authOptions,
   });
   if (!session || !session.user) {
