@@ -1,11 +1,14 @@
 import { twMerge } from "@/utils/twMerge";
 import { cva } from "class-variance-authority";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BiPlus } from "react-icons/bi";
 
 interface FloatButtonProps {
   size?: "small" | "medium" | "large";
   color?: "primary" | "secondary";
+  open: boolean;
+  onOpen?: () => void;
+  onClose?: () => void;
 }
 
 const variants = cva(
@@ -22,7 +25,7 @@ const variants = cva(
         secondary: "bg-gray-400 hover:bg-gray-700",
       },
       action: {
-        open: "bg-red-500 hover:bg-red-700",
+        open: "bg-blue-600 hover:bg-blue-700",
         closed: "bg-blue-400 hover:bg-blue-700",
       },
     },
@@ -34,18 +37,37 @@ const variants = cva(
   }
 );
 
-const FloatButton = ({ size, color }: FloatButtonProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const FloatButton = ({
+  size,
+  open = false,
+  color,
+  onOpen = () => {},
+  onClose = () => {},
+}: FloatButtonProps) => {
+  const [isOpen, setIsOpen] = useState(open);
+
+  useEffect(() => {
+    setIsOpen(open);
+  }, [open]);
+
+  const triggerAction = (open: boolean) => {
+    if (open) {
+      onOpen();
+    } else {
+      onClose();
+    }
+    setIsOpen(open);
+  };
   return (
     <button
       className={variants({ size, color, action: isOpen ? "open" : "closed" })}
-      onClick={() => setIsOpen(!isOpen)}
+      onClick={() => triggerAction(!isOpen)}
     >
       <BiPlus
         size={24}
         className={twMerge(
-          "transition-transform group-hover:rotate-180 duration-300 ease-in-out",
-          isOpen ? "rotate-45" : "rotate-0"
+          "transition-transform group-hover:rotate-90 duration-300 ease-in-out",
+          isOpen ? "rotate-45 group-hover:rotate-45" : "rotate-0"
         )}
       />
     </button>

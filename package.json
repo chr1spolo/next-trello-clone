@@ -2,10 +2,12 @@
   "name": "next-trello-clone",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "node server.js",
     "build": "next build --turbopack",
     "start": "NODE_ENV=production node server.js",
+    "start-windows": "set NODE_ENV=production&& node server.js",
     "lint": "eslint"
   },
   "dependencies": {

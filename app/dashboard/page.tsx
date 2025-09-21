@@ -6,7 +6,9 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import InviteMemberModal from "@/components/modals/InviteMemberModal";
 import FloatButton from "@/components/ui/Buttons/FloatButton";
-
+import { PiArrowCircleLeftLight } from "react-icons/pi";
+import { twMerge } from "@/utils/twMerge";
+import ActionHome from "@/components/modals/ActionHome";
 
 interface Project {
   id: string;
@@ -27,13 +29,13 @@ export default function DashboardPage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<{
     id: string;
     name: string;
   } | null>(null);
 
-
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -108,7 +110,6 @@ export default function DashboardPage() {
     }
   };
 
-
   const handleOpenInviteModal = (team: { id: string; name: string }) => {
     setSelectedTeam(team);
     setIsInviteModalOpen(true);
@@ -119,23 +120,45 @@ export default function DashboardPage() {
     setIsInviteModalOpen(false);
   };
 
+  const actions = [
+    {
+      id: "1",
+      label: "Crear Equipo",
+      icon: <PiArrowCircleLeftLight />,
+      onClick: () => console.log("Crear Equipo"),
+    },
+    {
+      id: "2",
+      label: "Crear Proyecto",
+      icon: <PiArrowCircleLeftLight />,
+      onClick: () => console.log("Crear Proyecto"),
+    },
+  ];
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        Cargando...
-      </div>
+      <div className="min-h-screen bg-transparent rounded-2xl text-black">Cargando...</div>
     );
   }
 
   if (status === "unauthenticated") {
-    return null; // El useEffect se encarga de la redirección
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-transparent rounded-2xl">
-      <div className="container mx-auto p-0 text-white min-h-[calc(100vh-64px)] w-full">
-        <FloatButton />
+    <div className="min-h-screen bg-transparent rounded-2xl relative">
+      <div className="container mx-auto p-0 text-white min-h-[calc(100vh-64px)] w-full relative">
+        <ActionHome
+          isActionsOpen={isActionsOpen}
+          setIsActionOpen={setIsActionsOpen}
+          actions={actions}
+        />
+
+        <FloatButton
+          open={isActionsOpen}
+          onOpen={() => setIsActionsOpen(true)}
+          onClose={() => setIsActionsOpen(false)}
+        />
       </div>
 
       <InviteMemberModal
