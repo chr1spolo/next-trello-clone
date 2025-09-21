@@ -86,12 +86,16 @@ model UserTeam {
 }
 
 model Project {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String?
   teamId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  deadline    DateTime?
+  tags        String?
+  visibility  String    @default("PRIVATE") // TEAM, PUBLIC
+
+  updatedAt DateTime @updatedAt
 
   team  Team   @relation(fields: [teamId], references: [id])
   tasks Task[]
@@ -101,9 +105,10 @@ model Task {
   id           String   @id @default(cuid())
   title        String
   description  String?
-  status       String   @default("TO_DO") // TO_DO, IN_PROGRESS, DONE
+  status       String   @default("BACK_LOG") // BACK_LOG, TO_DO, IN_PROGRESS, DONE
   projectId    String
   assignedToId String?
+  priority     String   @default("MEDIUM") // LOW, MEDIUM, HIGH
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

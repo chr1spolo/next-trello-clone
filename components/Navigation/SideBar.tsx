@@ -8,9 +8,14 @@ import { CiSettings as SettingsIcon } from "react-icons/ci";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { GoDot, GoDotFill } from "react-icons/go";
+import { MdOutlineKeyboardArrowDown as Down } from "react-icons/md";
+import { RiLogoutCircleLine as LogOut } from "react-icons/ri";
+
+import * as Accordion from "@radix-ui/react-accordion";
+
 import { twMerge } from "@/utils/twMerge";
 import { Team } from "@/types";
-import { GoDot } from "react-icons/go";
 
 const items: {
   name: string;
@@ -109,31 +114,94 @@ export default function SideBar() {
       </h2>
 
       <nav>
-        <ul className="space-y-2">
+        <Accordion.Root type="multiple" className="space-y-1">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive =
               path === item.href ||
               (item.subItems && item.subItems.some((sub) => sub.href === path));
             const haveSubItems = item.subItems && item.subItems.length > 0;
-            console.log(haveSubItems);
 
+            const Dot =
+              item.subItems && item.subItems.some((sub) => sub.href === path)
+                ? GoDotFill
+                : GoDot;
             return (
-              <li key={item.name}>
-                <div
-                  className={twMerge(
-                    isActive ? "bg-gray-200/70" : "bg-transparent",
-                    "rounded",
-                    "flex rounded hover:bg-gray-200/90 font-normal text-gray-600 text-sm",
-                    haveSubItems ? "flex-col justify-start items-baseline" : ""
-                  )}
-                >
+              <Accordion.Item
+                value={item.name}
+                key={item.name}
+                className={twMerge(
+                  isActive ? "bg-gray-200/70" : "bg-transparent",
+                  "rounded",
+                  "flex rounded hover:bg-gray-200/90 font-normal text-gray-600 text-sm",
+                  haveSubItems ? "flex-col justify-start items-baseline" : "",
+                  "transition-colors duration-300 ease-in-out"
+                )}
+              >
+                {haveSubItems ? (
+                  <Accordion.Header className="w-full">
+                    <Accordion.Trigger
+                      className={twMerge(
+                        "px-4 py-2",
+                        "transition-colors duration-300 ease-in-out",
+                        "items-center cursor-pointer",
+                        "flex justify-between w-full"
+                      )}
+                    >
+                      <div className="inline">
+                        <Icon className="inline-block w-6 h-6 font-thin mr-1" />
+                        {item.name}
+                      </div>
+                      <Down className="mr-2" />
+                    </Accordion.Trigger>
+                    <Accordion.Content>
+                      <div className="space-y-1 pl-1 mb-2">
+                        {item.subItems?.map((subItem, key) => (
+                          <div
+                            key={`${key}-subitem-`}
+                            className="ml-3 transition-all duration-300 ease-in-out hover:pl-1 hover:bg-gray-300 rounded z-10"
+                          >
+                            <button
+                              onClick={() =>
+                                subItem.href
+                                  ? router.push(subItem.href)
+                                  : subItem.action && subItem.id
+                                  ? subItem.action(
+                                      subItem.id,
+                                      subItem.type || "team"
+                                    )
+                                  : null
+                              }
+                              name={subItem.href}
+                              className={twMerge(
+                                "flex px-4 py-1 rounded hover:bg-gray-300 font-normal text-gray-600 text-sm",
+                                path === subItem.href ? "font-bold" : "",
+                                "transition-colors duration-300 ease-in-out",
+                                "items-center cursor-pointer w-full"
+                              )}
+                            >
+                              <Dot
+                                className={twMerge(
+                                  "inline-block w-3 h-3 font-thin mr-1",
+                                  path === subItem.href
+                                    ? "text-black font-bold"
+                                    : "text-gray-400"
+                                )}
+                              />
+                              {subItem.name}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </Accordion.Content>
+                  </Accordion.Header>
+                ) : (
                   <Link
                     href={item.href}
                     className={twMerge(
                       "px-4 py-2",
                       "transition-colors duration-300 ease-in-out",
-                      "items-center"
+                      "items-center w-full"
                     )}
                   >
                     <div className="inline">
@@ -141,62 +209,126 @@ export default function SideBar() {
                       {item.name}
                     </div>
                   </Link>
-                  {haveSubItems && (
-                    <div className="w-full mb-2">
-                      {item.subItems?.map((subItem, key) => (
-                        <div
-                          key={`${key}-subitem-`}
-                          className="ml-3 transition-all duration-300 ease-in-out hover:pl-1 hover:bg-gray-300 rounded z-10"
-                        >
-                          <button
-                            onClick={() =>
-                              subItem.href
-                                ? router.push(subItem.href)
-                                : subItem.action && subItem.id
-                                ? subItem.action(
-                                    subItem.id,
-                                    subItem.type || "team"
-                                  )
-                                : null
-                            }
-                            name={subItem.href}
-                            className={twMerge(
-                              "flex px-4 py-1 rounded hover:bg-gray-300 font-normal text-gray-600 text-sm",
-                              path === subItem.href ? "font-bold" : "",
-                              "transition-colors duration-300 ease-in-out",
-                              "items-center cursor-pointer w-full"
-                            )}
-                          >
-                            <GoDot
-                              className={twMerge(
-                                "inline-block w-3 h-3 font-thin mr-1",
-                                path === subItem.href
-                                  ? "text-black font-bold"
-                                  : "text-gray-400"
-                              )}
-                            />
-                            {subItem.name}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </li>
+                )}
+              </Accordion.Item>
             );
           })}
-          {isLogged && (
-            <li>
-              <Link
-                href="/logout"
-                className="flex px-4 py-2 rounded hover:bg-gray-200/90 font-normal text-red-400 text-sm"
-              >
-                Salir
-              </Link>
-            </li>
-          )}
-        </ul>
+
+          <button
+            className={twMerge(
+              "px-4 py-2",
+              "transition-colors duration-300 ease-in-out",
+              "items-center w-full",
+              "flex rounded hover:bg-gray-200/90 font-normal text-red-400 text-sm",
+              "transition-colors duration-300 ease-in-out"
+            )}
+          >
+            <div className="inline">
+              <LogOut className="inline-block w-5 h-5 font-thin mr-2" />
+              Salir
+            </div>
+          </button>
+        </Accordion.Root>
       </nav>
     </div>
   );
 }
+
+/* 
+
+
+{sidebarItems.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                path === item.href ||
+                (item.subItems &&
+                  item.subItems.some((sub) => sub.href === path));
+              const haveSubItems = item.subItems && item.subItems.length > 0;
+
+              const Dot =
+                item.subItems && item.subItems.some((sub) => sub.href === path)
+                  ? GoDotFill
+                  : GoDot;
+
+              return (
+                <li key={item.name}>
+                  <div
+                    className={twMerge(
+                      isActive ? "bg-gray-200/70" : "bg-transparent",
+                      "rounded",
+                      "flex rounded hover:bg-gray-200/90 font-normal text-gray-600 text-sm",
+                      haveSubItems
+                        ? "flex-col justify-start items-baseline"
+                        : ""
+                    )}
+                  >
+                    <Link
+                      href={item.href}
+                      className={twMerge(
+                        "px-4 py-2",
+                        "transition-colors duration-300 ease-in-out",
+                        "items-center"
+                      )}
+                    >
+                      <div className="inline">
+                        <Icon className="inline-block w-6 h-6 font-thin mr-1" />
+                        {item.name}
+                      </div>
+                    </Link>
+                    {haveSubItems && (
+                      <div className="w-full mb-2">
+                        {item.subItems?.map((subItem, key) => (
+                          <div
+                            key={`${key}-subitem-`}
+                            className="ml-3 transition-all duration-300 ease-in-out hover:pl-1 hover:bg-gray-300 rounded z-10"
+                          >
+                            <button
+                              onClick={() =>
+                                subItem.href
+                                  ? router.push(subItem.href)
+                                  : subItem.action && subItem.id
+                                  ? subItem.action(
+                                      subItem.id,
+                                      subItem.type || "team"
+                                    )
+                                  : null
+                              }
+                              name={subItem.href}
+                              className={twMerge(
+                                "flex px-4 py-1 rounded hover:bg-gray-300 font-normal text-gray-600 text-sm",
+                                path === subItem.href ? "font-bold" : "",
+                                "transition-colors duration-300 ease-in-out",
+                                "items-center cursor-pointer w-full"
+                              )}
+                            >
+                              <Dot
+                                className={twMerge(
+                                  "inline-block w-3 h-3 font-thin mr-1",
+                                  path === subItem.href
+                                    ? "text-black font-bold"
+                                    : "text-gray-400"
+                                )}
+                              />
+                              {subItem.name}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+            {isLogged && (
+              <li>
+                <Link
+                  href="/logout"
+                  className="flex px-4 py-2 rounded hover:bg-gray-200/90 font-normal text-red-400 text-sm"
+                >
+                  Salir
+                </Link>
+              </li>
+            )}
+
+
+*/

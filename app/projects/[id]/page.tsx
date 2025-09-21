@@ -10,9 +10,12 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
+import { GoDotFill } from "react-icons/go";
+
 import TaskModal from "@/components/modals/TaskModal";
 import { Task, Comment, Project } from "@/types/index";
 import { socket } from "@/socket";
+import { twMerge } from "@/utils/twMerge";
 
 export default function ProjectBoard({
   params,
@@ -207,7 +210,7 @@ export default function ProjectBoard({
 
   if (isLoading || status === "loading") {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center w-full bg-white rounded-2xl text-black p-8">
         Cargando tablero...
       </div>
     );
@@ -215,7 +218,7 @@ export default function ProjectBoard({
 
   if (!project) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center w-full bg-white rounded-2xl text-black p-8">
         Proyecto no encontrado o no tienes permiso.
       </div>
     );
@@ -229,12 +232,9 @@ export default function ProjectBoard({
 
   return (
     <div className="w-full bg-white rounded-2xl">
-      <div className="container mx-auto p-8  text-white min-h-[calc(100vh-64px)]">
-        <h1 className="text-4xl font-bold mb-8">{project.title}</h1>
-        <p>Status: {isConnected ? "connected" : "disconnected"}</p>
-        <p>Transport: {transport}</p>
-        {/* Formulario para crear nuevas tareas */}
-        <div className="mb-8">
+      <div className="container mx-auto p-8  text-white min-h-[calc(100vh-64px)] flex gap-4 flex-col">
+        <h2 className="text-2xl font-bold text-black">{project.title}</h2>
+        {/* <div className="mb-8">
           <form onSubmit={handleCreateTask} className="flex gap-4">
             <input
               type="text"
@@ -250,12 +250,36 @@ export default function ProjectBoard({
               Añadir Tarea
             </button>
           </form>
-        </div>
+        </div> */}
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex space-x-4 overflow-x-auto">
             {Object.entries(columns).map(([columnId, tasks]) => (
               <div key={columnId} className="min-w-[300px] flex-shrink-0">
-                <h2 className="text-xl font-semibold mb-4 text-center text-gray-200">
+                <h2
+                  className={twMerge(
+                    "text-md font-semibold mb-4 text-center lowercase p-2 rounded-md",
+                    columnId === "TO_DO"
+                      ? "text-blue-400"
+                      : columnId === "IN_PROGRESS"
+                      ? "text-yellow-400"
+                      : "text-green-400",
+                    columnId === "TO_DO"
+                      ? "bg-blue-100"
+                      : columnId === "IN_PROGRESS"
+                      ? "bg-yellow-100"
+                      : "bg-green-100"
+                  )}
+                >
+                  <GoDotFill
+                    className={twMerge(
+                      "inline-block mr-1",
+                      columnId === "TO_DO"
+                        ? "text-blue-400"
+                        : columnId === "IN_PROGRESS"
+                        ? "text-yellow-400"
+                        : "text-green-400"
+                    )}
+                  />
                   {columnId.replace("_", " ")}
                 </h2>
 
@@ -264,7 +288,7 @@ export default function ProjectBoard({
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="bg-gray-800 p-4 rounded-lg space-y-4 min-h-[500px]"
+                      className="bg-white p-2 rounded-lg space-y-2 min-h-[500px] border-2 border-gray-200"
                     >
                       {tasks.map((task, index) => (
                         <Draggable
@@ -277,7 +301,7 @@ export default function ProjectBoard({
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className="transition-transform transform hover:scale-105"
+                              className="transition-transform transform hover:scale-[1.009]"
                             >
                               <TaskCard
                                 task={task}

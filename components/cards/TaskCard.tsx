@@ -16,14 +16,13 @@ export default function TaskCard({
       className={twMerge(
         "bg-gray-100 text-white p-4",
         "rounded-md shadow-md cursor-pointer",
-        "hover:bg-gray-600 transition-colors",
-        "border-2",
+        "hover:bg-gray-600 transition-colors border",
         task.status === "DONE" &&
-          "border-green-300 hover:border-green-400 bg-green-50 hover:bg-green-100",
+          "border-green-300 hover:border-green-400 bg-green-50/50 hover:bg-green-100/60",
         task.status === "IN_PROGRESS" &&
-          "border-blue-300 hover:border-blue-400 bg-blue-50 hover:bg-blue-100",
+          "border-yellow-300 hover:border-yellow-400 bg-yellow-50/50 hover:bg-yellow-100/60",
         task.status === "TO_DO" &&
-          "border-yellow-300 hover:border-yellow-400 bg-yellow-50 hover:bg-yellow-100"
+          "border-blue-300 hover:border-blue-400 bg-blue-50/50 hover:bg-blue-100/60"
       )}
       onClick={() => onClick(task)}
     >
