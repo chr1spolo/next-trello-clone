@@ -137,7 +137,7 @@ export default function DashboardPage() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen bg-transparent rounded-2xl text-black">Cargando...</div>
+      <div className="min-h-screen rounded-2xl text-black bg-white">Cargando...</div>
     );
   }
 

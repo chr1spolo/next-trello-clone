@@ -6,7 +6,7 @@ import socketHandler from "./server/socket/index.js";
 
 const port = parseInt(process.env.PORT || "3000", 10);
 const dev = process.env.NODE_ENV !== "production";
-const app = next({ dev });
+const app = next({ dev, turbopack: true });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
