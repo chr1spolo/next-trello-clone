@@ -16,7 +16,7 @@ export default function Home() {
 
   if (status === "loading" || status === "authenticated") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-white text-black rounded-2xl">
         <p>Cargando...</p>
       </main>
     );

@@ -45,7 +45,7 @@ const ActionHome = ({
       className={twMerge(
         "absolute bottom-0 right-8 flex flex-col shadow-lg w-44 rounded-lg overflow-hidden bg-white",
         isActionsOpen
-          ? "opacity-100 bottom-24 w-48 z-10"
+          ? "opacity-100 bottom-32 w-48 z-10"
           : "opacity-0 pointer-events-none -z-50",
         "transition-all duration-500 ease-in-out"
       )}

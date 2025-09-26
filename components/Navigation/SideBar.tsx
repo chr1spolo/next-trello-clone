@@ -76,16 +76,25 @@ export default function SideBar() {
                   : item.name === "Equipos"
                   ? {
                       ...item,
-                      subItems: data?.map((team: Team) => ({
-                        name: team.name,
-                        action: handleModal,
-                        id: team.id,
-                        type: "team",
-                      })),
+                      subItems: [
+                        ...data?.map((team: Team) => ({
+                          name: team.name,
+                          action: handleModal,
+                          id: team.id,
+                          type: "team",
+                        })),
+                        {
+                          name: "Crear Equipo",
+                          action: handleModal,
+                          id: "new",
+                          type: "new-team",
+                        }
+                      ],
                     }
                   : item
               ),
             ];
+
             setSidebarItems(newSidebarItems);
           }
         } catch (error) {
@@ -108,7 +117,7 @@ export default function SideBar() {
   };
 
   return (
-    <div className="bg-white text-black w-64 p-4 rounded-2xl">
+    <div className="bg-white text-black w-64 p-4 rounded-2xl shadow-md">
       <h2 className="text-2xl font-bold mb-4 text-center">
         <span className="font-allan font-normal">TaskKy</span>
       </h2>

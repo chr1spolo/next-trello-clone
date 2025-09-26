@@ -43,7 +43,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${allan.variable} ${merriweather.variable} antialiased`}
       >
         <SessionProvider>
-          <div className="flex h-screen bg-white/88 p-4 gap-4">
+          <div className="flex h-screen bg-white/93 p-4 gap-3">
             <SideBar />
             <div className="flex flex-1 flex-col gap-4">
               <Navbar />
