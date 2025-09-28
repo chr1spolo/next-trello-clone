@@ -59,7 +59,6 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const iconPropsSize = iconSizes(sizeIcon);
-  console.log(iconPropsSize);
   return (
     <button className={button({ variant, size, className })} {...props}>
       {Icon && (

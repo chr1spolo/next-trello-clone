@@ -74,7 +74,6 @@ export default function ProjectBoard({
       });
 
       socket.on("update-task", (updatedTaskString: string) => {
-        console.log("Received updated task via WebSocket2:", updatedTaskString);
         if (!project) {
           console.warn("Project is not loaded yet. Cannot update task.");
           return;
@@ -161,7 +160,6 @@ export default function ProjectBoard({
     );
     setTasks(updatedTasks);
 
-    // Llamamos a la API para persistir el cambio en la base de datos
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "PUT",
@@ -170,18 +168,15 @@ export default function ProjectBoard({
       });
 
       if (!res.ok) {
-        // Si la actualización falla, revertimos el cambio en la UI
         setProject(project);
         console.error("Failed to update task status in DB.");
       } else {
         const updatedTask = await res.json();
-        console.log("Task status updated:", updatedTask);
-        // Emitimos el cambio a través de WebSocket para notificar a otros clientes
         socket.emit("update-task", JSON.stringify(updatedTask));
       }
     } catch (error) {
       console.error("Error updating task status:", error);
-      setProject(project); // Revertir el cambio
+      setProject(project);
     }
   };
 
@@ -194,7 +189,6 @@ export default function ProjectBoard({
     setTasks((prevTasks) =>
       prevTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
     );
-    // Emitimos el cambio a través de WebSocket para notificar a otros clientes
     socket.emit("update-task", JSON.stringify(updatedTask));
   };
 
@@ -234,23 +228,6 @@ export default function ProjectBoard({
     <div className="w-full bg-white rounded-2xl">
       <div className="container mx-auto p-8  text-white min-h-[calc(100vh-64px)] flex gap-4 flex-col">
         <h2 className="text-2xl font-bold text-black">{project.title}</h2>
-        {/* <div className="mb-8">
-          <form onSubmit={handleCreateTask} className="flex gap-4">
-            <input
-              type="text"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder="Título de la nueva tarea"
-              className="flex-grow px-4 py-2 border border-gray-600 rounded-md bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 transition-colors"
-            >
-              Añadir Tarea
-            </button>
-          </form>
-        </div> */}
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex space-x-4 overflow-x-auto">
             {Object.entries(columns).map(([columnId, tasks]) => (

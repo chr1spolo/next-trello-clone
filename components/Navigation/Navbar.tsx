@@ -46,19 +46,27 @@ export default function Navbar() {
   useEffect(() => {
     if (session?.user?.email) {
       const channel = pusherClient.subscribe(`user-${session.user.email}`);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      channel.bind("new-invitation", (data: any) => {
-        console.log("Nueva invitación recibida:", data);
-        setInvitations((prev) => [
-          ...prev,
-          {
-            id: data.id,
-            token: data.token,
-            inviter: { id: data.inviterId, name: data.inviterName },
-            team: { name: data.teamName },
-          },
-        ]);
-      });
+
+      channel.bind(
+        "new-invitation",
+        (data: {
+          id: string;
+          token: string;
+          inviterId: string;
+          inviterName: string;
+          teamName: string;
+        }) => {
+          setInvitations((prev) => [
+            ...prev,
+            {
+              id: data.id,
+              token: data.token,
+              inviter: { id: data.inviterId, name: data.inviterName },
+              team: { name: data.teamName },
+            },
+          ]);
+        }
+      );
 
       return () => {
         pusherClient.unsubscribe(`user-${session.user.email}`);
@@ -68,7 +76,10 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
         setIsInvitationsOpen(false);
       }
     };

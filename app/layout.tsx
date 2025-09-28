@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionProvider from "@/providers/SessionProvider";
 import Navbar from "@/components/Navigation/Navbar";
 import SideBar from "@/components/Navigation/SideBar";
+import ModalProvider from "@/providers/ModalProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,15 +44,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${allan.variable} ${merriweather.variable} antialiased`}
       >
         <SessionProvider>
-          <div className="flex h-screen bg-white/93 p-4 gap-3">
-            <SideBar />
-            <div className="flex flex-1 flex-col gap-4">
-              <Navbar />
-              <main className="flex-1 overflow-y-hidden h-[calc(100vh-112px)]">
-                {children}
-              </main>
+          <ModalProvider>
+            <div className="flex h-screen bg-white/93 p-4 gap-3">
+              <SideBar />
+              <div className="flex flex-1 flex-col gap-4">
+                <Navbar />
+                <main className="flex-1 overflow-y-hidden h-[calc(100vh-112px)]">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
+          </ModalProvider>
         </SessionProvider>
       </body>
     </html>
