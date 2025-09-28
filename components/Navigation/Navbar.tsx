@@ -123,7 +123,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white text-black p-4 px-6 flex items-center rounded-2xl justify-between shadow-md">
+      <nav className="bg-white text-black p-2 px-6 flex items-center justify-between border-b border-gray-200 rounded-b-md">
         <h2 className="text-lg font-semibold">Dashboard</h2>
         {session && session.user ? (
           <div className="flex items-center space-x-4">

@@ -114,7 +114,7 @@ export default function SideBar() {
   }
 
   return (
-    <div className="bg-white text-black w-64 p-4 rounded-2xl shadow-md">
+    <div className="bg-transparent text-black w-64 p-4">
       <h2 className="text-2xl font-bold mb-4 text-center">
         <span className="font-allan font-normal">TaskKy</span>
       </h2>

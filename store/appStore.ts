@@ -22,7 +22,6 @@ const items: {
   { name: "Configuración", href: "/settings", icon: SettingsIcon },
 ];
 
-
 interface SidebarItem {
   name: string;
   href: string;
