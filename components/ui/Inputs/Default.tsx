@@ -15,7 +15,7 @@ const defaultClass =
   "p-2 px-4 rounded-md text-sm font-semibold transition-all flex items-center cursor-pointer group duration-300 ease-in-out font-main w-full bg-white text-black focus-visible:outline-none";
 
 const defaultClassIconDiv =
-  "flex flex-row items-center border border-gray-300 rounded-md shadow-sm p-1 hover:border-gray-400 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all duration-300 ease-in-out bg-white justify-center px-2";
+  "flex flex-row items-center border border-gray-300 rounded-md shadow-sm p-1 hover:border-gray-400 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all duration-300 ease-in-out bg-white justify-center px-2 w-full";
 
 const input = cva(defaultClass, {
   variants: {
@@ -92,6 +92,7 @@ export default function Input({
         <input
           className={input({ variant, inputSize, className, hasIcon: "yes" })}
           {...props}
+          value={value}
         />
       </div>
     );
@@ -100,6 +101,7 @@ export default function Input({
   return (
     <input
       className={input({ variant, inputSize, className, hasIcon: "no" })}
+      value={value}
       {...props}
     />
   );

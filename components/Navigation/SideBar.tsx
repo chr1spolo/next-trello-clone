@@ -21,8 +21,7 @@ export default function SideBar() {
 
   const { data: session, status } = useSession();
   const [isMounted, setIsMounted] = useState(false);
-  const [teams, setTeams] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const path = usePathname();
   const router = useRouter();
 
@@ -35,60 +34,71 @@ export default function SideBar() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      const fetchTeams = async () => {
-        try {
-          const res = await fetch("/api/teams");
-          if (res.ok) {
-            const data = await res.json();
-            setTeams(data);
-            const projects = data
-              .map((team: Team) => {
-                const projectByTeam = team.projects?.map((project) => ({
-                  name: project.title,
-                  href: `/projects/${project.id}`,
-                }));
-
-                return projectByTeam;
-              })
-              .flat();
-
-            const newSidebarItems = [
-              ...sidebarItems.map((item) =>
-                item.name === "Proyectos"
-                  ? { ...item, subItems: projects }
-                  : item.name === "Equipos"
-                  ? {
-                      ...item,
-                      subItems: [
-                        ...data?.map((team: Team) => ({
-                          name: team.name,
-                          action: handleModal,
-                          id: team.id,
-                          type: "team",
-                        })),
-                        {
-                          name: "Crear Equipo",
-                          action: handleModal,
-                          id: "new",
-                          type: "team",
-                        },
-                      ],
-                    }
-                  : item
-              ),
-            ];
-
-            setSidebarItems(newSidebarItems);
-          }
-        } catch (error) {
-          console.error("Error al obtener los equipos:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
       fetchTeams();
     }
   }, [status]);
+
+  const fetchTeams = async () => {
+    try {
+      const res = await fetch("/api/teams");
+      if (res.ok) {
+        const data = await res.json();
+        const projects = data
+          .map((team: Team) => {
+            const projectByTeam = team.projects?.map((project) => ({
+              name: project.title,
+              href: `/projects/${project.id}`,
+            }));
+
+            return projectByTeam;
+          })
+          .flat();
+
+        const newSidebarItems = [
+          ...sidebarItems.map((item) =>
+            item.name === "Proyectos"
+              ? {
+                  ...item,
+                  subItems: [
+                    ...projects,
+                    {
+                      name: "Crear Proyecto",
+                      action: handleModal,
+                      id: "new",
+                      type: "project",
+                    },
+                  ],
+                }
+              : item.name === "Equipos"
+              ? {
+                  ...item,
+                  subItems: [
+                    ...data?.map((team: Team) => ({
+                      name: team.name,
+                      action: handleModal,
+                      id: team.id,
+                      type: "team",
+                    })),
+                    {
+                      name: "Crear Equipo",
+                      action: handleModal,
+                      id: "new",
+                      type: "team",
+                    },
+                  ],
+                }
+              : item
+          ),
+        ];
+
+        setSidebarItems(newSidebarItems);
+      }
+    } catch (error) {
+      console.error("Error al obtener los equipos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleModal = (id: string, type: string) => {
     // Aquí puedes implementar la lógica para abrir el modal
@@ -111,6 +121,10 @@ export default function SideBar() {
 
   if (!isMounted) {
     return null;
+  }
+
+  if (isLoading) {
+    return <div>...</div>;
   }
 
   return (

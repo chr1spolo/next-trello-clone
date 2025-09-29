@@ -14,4 +14,5 @@ export interface Project extends ProjectClient {
 
 export interface Team extends TeamClient {
   projects?: Project[];
+  members?: Member[];
 }

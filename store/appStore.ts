@@ -18,7 +18,21 @@ const items: {
 }[] = [
   { name: "Inicio", href: "/dashboard", icon: HomeIcon },
   { name: "Proyectos", href: "/projects", icon: ProjectsIcon },
-  { name: "Equipos", href: "/teams", icon: TeamIcon },
+  {
+    name: "Equipos",
+    icon: TeamIcon,
+    href: "/teams",
+    subItems: [
+      {
+        name: "Crear equipo",
+        id: "new",
+        type: "team",
+        action: () => {
+          alert("Primero debes iniciar sesión");
+        },
+      },
+    ],
+  },
   { name: "Configuración", href: "/settings", icon: SettingsIcon },
 ];
 

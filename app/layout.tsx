@@ -43,12 +43,13 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${allan.variable} ${merriweather.variable} antialiased`}
+        suppressHydrationWarning
       >
         <SessionProvider>
           <ModalProvider>
-            <div className="flex h-screen bg-gray-100">
+            <div className="flex h-screen bg-gray-50">
               <SideBar />
-              <div className="flex flex-1 flex-col gap-4 bg-white p-4 rounded-lg h-screen">
+              <div className="flex flex-1 flex-col gap-4 bg-white p-4 rounded-lg h-screen shadow-xs">
                 <Navbar />
                 <main className="flex-1 overflow-y-hidden h-[calc(100vh-112px)]">
                   {children}
