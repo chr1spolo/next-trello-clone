@@ -47,9 +47,9 @@ export default function RootLayout({
       >
         <SessionProvider>
           <ModalProvider>
-            <div className="flex h-screen bg-gray-50">
+            <div className="flex h-screen bg-white/95">
               <SideBar />
-              <div className="flex flex-1 flex-col gap-4 bg-white p-4 rounded-lg h-screen shadow-xs">
+              <div className="flex flex-1 flex-col gap-4 bg-white p-4 rounded-lg h-screen shadow-md shadow-black/10">
                 <Navbar />
                 <main className="flex-1 overflow-y-hidden h-[calc(100vh-112px)]">
                   {children}

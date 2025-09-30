@@ -73,7 +73,6 @@ export default function Input({
   ...props
 }: InputProps) {
   const iconPropsSize = iconSizes(sizeIcon);
-  console.log(value);
   if (Icon) {
     return (
       <div className={defaultClassIconDiv}>

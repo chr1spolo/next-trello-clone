@@ -28,60 +28,126 @@ const CreateTeamModal = () => {
       return alert("El nombre del equipo no puede estar vacío");
     }
 
-    try {
-      const res = await fetch("/api/teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: teamName }),
-      });
-
-      if (res.ok) {
-        setTeamName(teamName);
-        const newTeam = await res.json();
-        const teamsFiltered = sidebarItems.filter(
-          (item) => item.name === "Equipos"
-        );
-
-        // adding but checking the names to order alphabetically
-
-        const newTeams = [
-          ...(teamsFiltered[0].subItems || []),
-          {
-            name: newTeam.name,
-            action: () => openModal("team", { teamId: newTeam.id }),
-            id: newTeam.id,
-            type: "team",
+    if (!teamId) {
+      // Create new team
+      try {
+        const res = await fetch("/api/teams", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        ];
-        // remove "create new team" from newteams list
-        const newTeamsFiltered = newTeams.filter(
-          (item) => item.name !== "Crear Equipo"
-        );
-        newTeamsFiltered.sort((a, b) => a.name.localeCompare(b.name));
-
-        // add to last item
-        const newSidebarItems = sidebarItems.map((item) => {
-          if (item.name === "Equipos") {
-            return {
-              ...item,
-              subItems: [
-                ...newTeamsFiltered,
-                {
-                  name: "Crear Equipo",
-                  action: () => openModal("team", { teamId: null }),
-                  id: "new",
-                  type: "team",
-                },
-              ],
-            };
-          }
-          return item;
+          body: JSON.stringify({
+            name: teamName,
+            members: members.map((member) => ({
+              email: member.user.email,
+              role: member.role,
+            })),
+          }),
         });
 
-        setSidebarItems(newSidebarItems);
+        if (res.ok) {
+          const newTeam = await res.json();
+
+          if (newTeam.message && newTeam.message.length > 0) {
+            alert(newTeam.message);
+          }
+
+          const sidebarTeams = sidebarItems.filter(
+            (item) => item.name === "Equipos"
+          );
+          const newSidebarTeams = [
+            ...(sidebarTeams[0].subItems?.filter(
+              (item) => item.name !== "Crear Equipo"
+            ) || []),
+            {
+              id: newTeam.id,
+              name: newTeam.name,
+              action: () => openModal("team", { teamId: newTeam.id }),
+            },
+          ];
+
+          newSidebarTeams.sort((a, b) =>
+            a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+          );
+
+          newSidebarTeams.push({
+            id: "new",
+            name: "Crear Equipo",
+            action: () => openModal("team", { teamId: null }),
+          });
+
+          const newSidebarItems = [
+            ...sidebarItems.map((item) => {
+              if (item.name === "Equipos") {
+                return {
+                  ...item,
+                  subItems: newSidebarTeams,
+                };
+              }
+              return item;
+            }),
+          ];
+
+          setSidebarItems(newSidebarItems);
+          alert("Equipo creado con éxito");
+          closeCreateModal();
+        } else {
+          const errorData = await res.json();
+          alert(errorData.message || "Error al crear el equipo");
+        }
+      } catch (error) {
+        console.error("Error creating team:", error);
+        alert("Error al crear el equipo");
       }
-    } catch (error) {
-      console.error("Error al crear el equipo:", error);
+    } else {
+      // Update existing team
+      try {
+        const res = await fetch(`/api/teams/${teamId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: teamName,
+            members: members.map((member) => ({
+              userId: member.userId,
+              role: member.role,
+            })),
+          }),
+        });
+
+        if (res.ok) {
+          const updatedTeam = await res.json();
+
+          const newSidebarItems = sidebarItems.map((item) => {
+            if (item.name === "Equipos") {
+              return {
+                ...item,
+                subItems: item.subItems?.map((subItem) => {
+                  if (subItem.id === teamId) {
+                    return {
+                      ...subItem,
+                      name: updatedTeam.name,
+                    };
+                  }
+                  return subItem;
+                }),
+              };
+            }
+            return item;
+          });
+
+          setSidebarItems(newSidebarItems);
+          alert("Equipo actualizado con éxito");
+          closeCreateModal();
+        } else {
+          const errorData = await res.json();
+          alert(errorData.message || "Error al actualizar el equipo");
+        }
+      } catch (error) {
+        console.error("Error updating team:", error);
+        alert("Error al actualizar el equipo");
+      }
     }
   };
 
@@ -91,17 +157,19 @@ const CreateTeamModal = () => {
     } else if (type === "team" && !teamId && status === "authenticated") {
       setTeamInfo(null);
       setTeamName("");
-      setMembers([{
-        user: {
-          id: session?.user.id,
-          email: session?.user.email as string,
-          name: session?.user.name as string,
-          image: session?.user.image as string,
-          emailVerified: new Date() || null,
+      setMembers([
+        {
+          user: {
+            id: session?.user.id,
+            email: session?.user.email as string,
+            name: session?.user.name as string,
+            image: session?.user.image as string,
+            emailVerified: new Date() || null,
+          },
+          userId: session?.user.id as string,
+          role: "OWNER",
         },
-        userId: session?.user.id as string,
-        role: "ADMIN",
-      }]);
+      ]);
     }
   }, [teamId, type, status]);
 
@@ -128,18 +196,15 @@ const CreateTeamModal = () => {
     }
   };
 
-  const createNewTeam = () => {
-    try {
-      const res = fetch("/api/teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: teamName }),
-      });
-    } catch (error) {}
-  };
-
   const handleAddMember = (member: Member) => {
-    if (members.find((m) => m.user.email === member.user.email)) {
+    const checkMember = members.find((m) => m.user.email === member.user.email);
+    if (checkMember) {
+
+      if (checkMember.role !== member.role) {
+        // Update role
+        setMembers(members.map((m) => (m.user.email === member.user.email ? member : m)));
+        return;
+      }
       alert("El miembro ya ha sido invitado");
       return;
     }
@@ -147,9 +212,8 @@ const CreateTeamModal = () => {
   };
 
   const handleRemoveMember = (email: string) => {
-    if (!teamId) {
-      setMembers(members.filter((member) => member.user.email !== email));
-    }
+    
+    setMembers(members.filter((member) => member.user.email !== email));
   };
 
   if (type !== "team") return null;
@@ -175,7 +239,6 @@ const CreateTeamModal = () => {
             <Input
               type="text"
               placeholder="Ingresa el nombre del equipo"
-              defaultValue={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               value={teamName}
               icon={PiBowlSteam}

@@ -5,13 +5,19 @@ import React from "react";
 import { RiCloseCircleLine } from "react-icons/ri";
 
 import { Member } from "@/types";
+import { ROLES } from "@/utils/constants";
 
 interface MemberItemProps {
   member: Member;
   onRemoveMember?: (member: Member) => void;
+  onChangeRole?: (member: Member, newRole: keyof typeof ROLES) => void;
 }
 
-const MemberItem = ({ member, onRemoveMember }: MemberItemProps) => {
+const MemberItem = ({
+  member,
+  onRemoveMember,
+  onChangeRole,
+}: MemberItemProps) => {
   return (
     <div className="flex items-center gap-2 flex-row px-2 justify-between">
       <div className="flex items-center gap-2 flex-row">
@@ -23,7 +29,6 @@ const MemberItem = ({ member, onRemoveMember }: MemberItemProps) => {
               className="w-6 h-6 rounded-full"
               width={24}
               height={24}
-              unoptimized
             />
           ) : (
             <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs text-white">
@@ -36,11 +41,12 @@ const MemberItem = ({ member, onRemoveMember }: MemberItemProps) => {
         <div className="flex flex-col">
           <span className="text-sm font-medium text-gray-700">
             {member.user.name || member.user.email}
-            {member.role === "ADMIN" && (
-              <span className="text-[10px] text-blue-500 font-bold ml-1">
-                (Admin &#9733;)
-              </span>
-            )}
+            {member.role === "ADMIN" ||
+              (member.role === "OWNER" && (
+                <span className="text-[10px] text-blue-500 font-bold ml-1">
+                  (Admin &#9733;)
+                </span>
+              ))}
           </span>
           {member.role && (
             <span className="text-[10px] text-gray-400 font-bold italic">
@@ -54,12 +60,20 @@ const MemberItem = ({ member, onRemoveMember }: MemberItemProps) => {
           name="role"
           id=""
           className="bg-white text-gray-600 p-2 text-xs border-b border-gray-300 rounded-lg"
+          value={member.role}
+          disabled={member.role === "OWNER"}
+          onChange={(e) =>
+            onChangeRole?.(member, e.target.value as keyof typeof ROLES)
+          }
         >
+          {member.role === "OWNER" ? (
+            <option value="OWNER">Propietario</option>
+          ) : null}
           <option value="MEMBER">Miembro</option>
           <option value="ADMIN">Administrador</option>
         </select>
         <div className="flex justify-end">
-          {member.role !== "ADMIN" ? (
+          {member.role !== "OWNER" ? (
             <button
               className="text-red-500 hover:text-red-700"
               onClick={() => onRemoveMember?.(member)}

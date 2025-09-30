@@ -53,7 +53,7 @@ const ListMembers = ({
 
   const handleRemoveMember = (member: Member) => {
     if (onRemoveMember) {
-      console.log("Removing member:", member);
+      console.log("Removing member with ID:", member.user.email);
       onRemoveMember(member.user.email!);
     }
   }
@@ -72,11 +72,16 @@ const ListMembers = ({
               key={member.user.id}
               member={member}
               onRemoveMember={handleRemoveMember}
+              onChangeRole={(m, newRole) => {
+                if (onAddMember) {
+                  onAddMember({ ...m, role: newRole });
+                }
+              }}
             />
           ))
         )}
       </div>
-      <div className="w-full flex flex-row gap-2 border-t pt-2">
+      <div className="w-full flex flex-row gap-2 border-t pt-2 border-gray-300">
         <div className="flex-grow flex basis-3/4">
           <Input
             placeholder="Invitar a un miembro"
