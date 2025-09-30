@@ -12,7 +12,7 @@ interface FloatButtonProps {
 }
 
 const variants = cva(
-  "fixed bottom-8 right-8 text-white p-4 rounded-full shadow-lg transition group",
+  "fixed bottom-8 right-8 text-white p-4 rounded-full shadow-lg transition group cursor-pointer",
   {
     variants: {
       size: {

@@ -9,6 +9,7 @@ import FloatButton from "@/components/ui/Buttons/FloatButton";
 import { PiArrowCircleLeftLight } from "react-icons/pi";
 import { twMerge } from "@/utils/twMerge";
 import ActionHome from "@/components/modals/ActionHome";
+import { useModalStore } from "@/store/modalStore";
 
 interface Project {
   id: string;
@@ -36,6 +37,8 @@ export default function DashboardPage() {
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+
+  const { openModal, closeModal } = useModalStore();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -125,13 +128,13 @@ export default function DashboardPage() {
       id: "1",
       label: "Crear Equipo",
       icon: <PiArrowCircleLeftLight />,
-      onClick: () => console.log("Crear Equipo"),
+      onClick: () => openModal("team", { teamId: null })
     },
     {
       id: "2",
       label: "Crear Proyecto",
       icon: <PiArrowCircleLeftLight />,
-      onClick: () => console.log("Crear Proyecto"),
+      onClick: () => openModal("project", { projectId: null }),
     },
   ];
 

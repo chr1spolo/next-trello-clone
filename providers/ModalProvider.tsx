@@ -34,7 +34,7 @@ export default function ModalProvider({
         className={twMerge(
           "absolute inset-0 bg-black/40",
           "flex items-center justify-center p-4 z-50",
-          "transition-all duration-300 ease-in-out",
+          "transition-all duration-700 ease-in-out",
           isOpen ? "opacity-100 z-10" : "-z-10 pointer-events-none opacity-0"
         )}
       >

@@ -67,6 +67,13 @@ export async function PUT(
     );
   }
 
+  if (["OWNER", "ADMIN"].includes(team.members.find((m) => m.userId === userId)?.role || "") === false) {
+    return NextResponse.json(
+      { error: "Only team owners/admin can update the team" },
+      { status: 403 }
+    );
+  }
+
   const body: {
     name: string;
     members: Array<{ email: string; role: string }>;

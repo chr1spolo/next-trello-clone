@@ -3,7 +3,8 @@ import { create } from "zustand";
 type ModalType = "team" | "project" | null;
 
 interface ModalPayload {
-  teamId: string | null;
+  teamId?: string | null;
+  projectId?: string | null;
 }
 
 interface ModalStoreProps {
