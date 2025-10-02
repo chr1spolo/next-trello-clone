@@ -1,3 +1,4 @@
+import { twMerge } from "@/utils/twMerge";
 import { cva } from "class-variance-authority";
 import { IconType } from "react-icons";
 
@@ -56,6 +57,7 @@ export default function Button({
   className,
   icon: Icon,
   sizeIcon = "md",
+  classIcon,
   ...props
 }: ButtonProps) {
   const iconPropsSize = iconSizes(sizeIcon);
@@ -63,9 +65,10 @@ export default function Button({
     <button className={button({ variant, size, className })} {...props}>
       {Icon && (
         <Icon
-          className={
-            "inline-block mr-2 group-hover:scale-110 transition-transform duration-200 ease-in-out"
-          }
+          className={twMerge(
+            "inline-block mr-2 group-hover:scale-110 transition-transform duration-200 ease-in-out",
+            classIcon
+          )}
           style={{
             width: iconPropsSize.width,
             height: iconPropsSize.height,

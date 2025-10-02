@@ -22,7 +22,9 @@ export default function TaskCard({
         task.status === "IN_PROGRESS" &&
           "border-yellow-300 hover:border-yellow-400 bg-yellow-50/50 hover:bg-yellow-100/60",
         task.status === "TO_DO" &&
-          "border-blue-300 hover:border-blue-400 bg-blue-50/50 hover:bg-blue-100/60"
+          "border-blue-300 hover:border-blue-400 bg-blue-50/50 hover:bg-blue-100/60",
+        task.status === "BACKLOG" &&
+          "border-gray-300 hover:border-gray-400 bg-gray-50/50 hover:bg-gray-200/60"
       )}
       onClick={() => onClick(task)}
     >
