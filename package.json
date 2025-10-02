@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node server.js",
     "build": "next build --turbopack",
-    "start": "NODE_ENV=production node server.js",
+    "start": "npx prisma db push --force-reset && NODE_ENV=production node server.js",
     "start-windows": "set NODE_ENV=production&& node server.js",
     "lint": "eslint"
   },
