@@ -16,6 +16,13 @@ import TaskModal from "@/components/modals/TaskModal";
 import { Task, Comment, Project } from "@/types/index";
 import { socket } from "@/socket";
 import { twMerge } from "@/utils/twMerge";
+import Breadcrumb from "@/components/Breadcrumb";
+import Image from "next/image";
+import { FaPlus, FaRegEye } from "react-icons/fa";
+import { BsPersonCheck } from "react-icons/bs";
+import { TbCalendarCode } from "react-icons/tb";
+import { LiaTagsSolid } from "react-icons/lia";
+import Button from "@/components/ui/Buttons/Default";
 
 export default function ProjectBoard({
   params,
@@ -219,45 +226,137 @@ export default function ProjectBoard({
   }
 
   const columns = {
-    TO_DO: tasks.filter((t) => t.status === "TO_DO"),
-    IN_PROGRESS: tasks.filter((t) => t.status === "IN_PROGRESS"),
-    DONE: tasks.filter((t) => t.status === "DONE"),
+    BACKLOG: {
+      title: "Backlog",
+      tasks: tasks.filter((t) => t.status === "BACKLOG"),
+    },
+    TO_DO: {
+      title: "To Do",
+      tasks: tasks.filter((t) => t.status === "TO_DO"),
+    },
+    IN_PROGRESS: {
+      title: "In Progress",
+      tasks: tasks.filter((t) => t.status === "IN_PROGRESS"),
+    },
+    DONE: {
+      title: "Done",
+      tasks: tasks.filter((t) => t.status === "DONE"),
+    },
   };
+
+  console.log(project);
 
   return (
     <div className="w-full bg-white rounded-2xl">
       <div className="container mx-auto p-8  text-white min-h-[calc(100vh-64px)] flex gap-4 flex-col">
+        <Breadcrumb>
+          <span>Proyectos</span>
+          <span>{project.title}</span>
+        </Breadcrumb>
         <h2 className="text-2xl font-bold text-black">{project.title}</h2>
+        <div className="flex items-center gap-6">
+          <div className="flex justify-between flex-col gap-2">
+            <div>
+              <FaRegEye className="inline-block mr-1 text-gray-400 w-4 h-4" />
+              <span className="font-medium text-gray-400 text-xs">
+                Visibility
+              </span>
+            </div>
+            <div>
+              <BsPersonCheck className="inline-block mr-1 text-gray-400 w-4 h-4" />
+              <span className="font-medium text-gray-400 text-xs">
+                Assigned to
+              </span>
+            </div>
+            <div>
+              <TbCalendarCode className="inline-block mr-1 text-gray-400 w-4 h-4" />
+              <span className="font-medium text-gray-400 text-xs">
+                Deadline
+              </span>
+            </div>
+            <div>
+              <LiaTagsSolid className="inline-block mr-1 text-gray-400 w-4 h-4" />
+              <span className="font-medium text-gray-400 text-xs">Tags</span>
+            </div>
+          </div>
+          <div className="flex flex-1 justify-between flex-col gap-2">
+            <div className="h-6 items-center text-gray-600">Private</div>
+            <div className="h-6 items-center flex -space-x-2">
+              {project.team.members.map((member) => (
+                <div
+                  key={member.user.id}
+                  className="flex items-center space-x-1"
+                >
+                  <Image
+                    key={member.user.id}
+                    src={member.user.image || "/default-avatar.png"}
+                    alt={member.user.name || "User Avatar"}
+                    className="w-6 h-6 rounded-full border-2 border-white overflow-hidden"
+                    width={32}
+                    height={32}
+                    priority
+                  />
+                  <span className="text-xs text-black">{member.user.name}</span>
+                </div>
+              ))}
+            </div>
+            <div className="h-6 items-center text-gray-600 text-xs flex">
+              No deadline
+            </div>
+            <div className="h-6 items-center flex -space-x-2">
+              {project.tags?.split(",").map((tag, index) => (
+                <span
+                  key={index}
+                  className="bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                >
+                  {tag}
+                </span>
+              ))}
+              {!project.tags && (
+                <span className="text-gray-400 text-xs">No tags</span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <Button className="bg-blue-500 text-white px-8 text-xs" icon={FaPlus} sizeIcon={8} classIcon="font-tight">Add Task</Button>
+        </div>
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex space-x-4 overflow-x-auto">
-            {Object.entries(columns).map(([columnId, tasks]) => (
-              <div key={columnId} className="min-w-[300px] flex-shrink-0">
+          <div className="flex space-x-3 overflow-x-auto">
+            {Object.entries(columns).map(([columnId, { title, tasks }]) => (
+              <div key={columnId} className="min-w-[250px] flex-shrink-0">
                 <h2
                   className={twMerge(
-                    "text-md font-semibold mb-4 text-center lowercase p-2 rounded-md",
+                    "text-[13px] font-bold mb-2 text-left p-2 px-4 rounded-md flex flex-row items-center gap-2",
                     columnId === "TO_DO"
-                      ? "text-blue-400"
+                      ? "text-blue-500"
                       : columnId === "IN_PROGRESS"
-                      ? "text-yellow-400"
-                      : "text-green-400",
+                      ? "text-yellow-500"
+                      : columnId === "BACKLOG"
+                      ? "text-black"
+                      : "text-green-500",
                     columnId === "TO_DO"
-                      ? "bg-blue-100"
+                      ? "bg-blue-100 shadow-sm shadow-blue-500/30"
                       : columnId === "IN_PROGRESS"
-                      ? "bg-yellow-100"
-                      : "bg-green-100"
+                      ? "bg-yellow-100 shadow-sm shadow-yellow-500/30"
+                      : columnId === "BACKLOG"
+                      ? "bg-gray-100 shadow-sm shadow-gray-500/30"
+                      : "bg-green-100 shadow-sm shadow-green-500/30"
                   )}
                 >
-                  <GoDotFill
+                  <div
                     className={twMerge(
-                      "inline-block mr-1",
+                      "mr-1 border-3 border-white overflow-hidden rounded-full h-4 w-4 flex items-center justify-center m-0",
                       columnId === "TO_DO"
-                        ? "text-blue-400"
+                        ? "bg-blue-400"
                         : columnId === "IN_PROGRESS"
-                        ? "text-yellow-400"
-                        : "text-green-400"
+                        ? "bg-yellow-400"
+                        : columnId === "BACKLOG"
+                        ? "bg-black"
+                        : "bg-green-400"
                     )}
-                  />
-                  {columnId.replace("_", " ")}
+                  ></div>
+                  {title}
                 </h2>
 
                 <Droppable droppableId={columnId}>
@@ -265,7 +364,7 @@ export default function ProjectBoard({
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="bg-white p-2 rounded-lg space-y-2 min-h-[500px] border-2 border-gray-200"
+                      className="bg-white p-2 rounded-sm space-y-2 min-h-[500px] border-0 border-gray-200"
                     >
                       {tasks.map((task, index) => (
                         <Draggable

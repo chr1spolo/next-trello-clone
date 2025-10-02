@@ -3,6 +3,7 @@ import { TbHome2 as HomeIcon } from "react-icons/tb";
 import { MdOutlineFolderCopy as ProjectsIcon } from "react-icons/md";
 import { AiOutlineTeam as TeamIcon } from "react-icons/ai";
 import { CiSettings as SettingsIcon } from "react-icons/ci";
+import { SidebarItem } from "@/types/Sidebar";
 
 const items: {
   name: string;
@@ -36,20 +37,7 @@ const items: {
   { name: "Configuración", href: "/settings", icon: SettingsIcon },
 ];
 
-interface SidebarItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<{
-    className?: string;
-  }>;
-  subItems?: {
-    name: string;
-    href?: string;
-    id?: string;
-    type?: string;
-    action?: (id: string, type: string) => void;
-  }[];
-}
+
 
 interface AppStoreProps {
   sidebarItems: SidebarItem[];

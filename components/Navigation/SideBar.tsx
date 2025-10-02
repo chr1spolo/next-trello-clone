@@ -107,6 +107,9 @@ export default function SideBar() {
       case "team":
         teamTrigger(id);
         break;
+      case "project":
+        projectTrigger(id);
+        break;
       default:
         break;
     }
@@ -115,8 +118,11 @@ export default function SideBar() {
   const teamTrigger = (id: string) => {
     const teamId = id === "new" ? null : id;
     openModal("team", { teamId });
-    // Aquí puedes implementar la lógica para abrir el modal de equipo
-    console.log("Abrir modal de equipo con ID2:", teamId);
+  };
+
+  const projectTrigger = (id: string) => {
+    const projectId = id === "new" ? null : id;
+    openModal("project", { projectId });
   };
 
   if (!isMounted) {
