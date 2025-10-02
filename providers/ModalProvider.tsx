@@ -5,6 +5,7 @@ import { twMerge } from "@/utils/twMerge";
 import { useModalStore } from "@/store/modalStore";
 import { useEffect, useRef } from "react";
 import CreateProjectModal from "@/components/modals/CreateProjectModal";
+import CreateTaskModal from "@/components/modals/CreateTaskModal";
 
 export default function ModalProvider({
   children,
@@ -42,6 +43,7 @@ export default function ModalProvider({
         <div className="bg-white rounded-lg w-full max-w-xl p-6" ref={ref}>
           <CreateTeamModal />
           <CreateProjectModal />
+          <CreateTaskModal />
         </div>
       </div>
     </>

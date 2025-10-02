@@ -23,6 +23,7 @@ import { BsPersonCheck } from "react-icons/bs";
 import { TbCalendarCode } from "react-icons/tb";
 import { LiaTagsSolid } from "react-icons/lia";
 import Button from "@/components/ui/Buttons/Default";
+import { useModalStore } from "@/store/modalStore";
 
 export default function ProjectBoard({
   params,
@@ -40,6 +41,8 @@ export default function ProjectBoard({
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [transport, setTransport] = useState<string>("N/A");
+
+  const { openModal } = useModalStore();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -106,6 +109,25 @@ export default function ProjectBoard({
       });
     }
 
+    socket.on("create-task", (newTaskString: string) => {
+      if (!project) {
+        console.warn("Project is not loaded yet. Cannot add new task.");
+        return;
+      }
+      try {
+        if (!newTaskString) throw new Error("Invalid task data");
+        let newTask: Task;
+        if (typeof newTaskString === "string") {
+          newTask = JSON.parse(newTaskString);
+        } else {
+          newTask = newTaskString;
+        }
+        setTasks((prevTasks) => [...prevTasks, newTask]);
+      } catch (error) {
+        console.error("Error adding new task:", error);
+      }
+    });
+
     function onDisconnect() {
       setIsConnected(false);
       setTransport("N/A");
@@ -121,31 +143,6 @@ export default function ProjectBoard({
       socket.off("disconnect", onDisconnect);
     };
   }, [project]);
-
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskTitle.trim() || !project) return;
-
-    try {
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTaskTitle, projectId }),
-      });
-
-      if (res.ok) {
-        const newTask = await res.json();
-        const updatedProject = {
-          ...project,
-          tasks: [...tasks, newTask],
-        };
-        setProject(updatedProject);
-        setNewTaskTitle("");
-      }
-    } catch (error) {
-      console.error("Error creating task:", error);
-    }
-  };
 
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -244,7 +241,9 @@ export default function ProjectBoard({
     },
   };
 
-  console.log(project);
+  const toggleModalCreateTask = () => {
+    openModal("new-task", { projectId: project.id });
+  };
 
   return (
     <div className="w-full bg-white rounded-2xl">
@@ -281,11 +280,15 @@ export default function ProjectBoard({
           </div>
           <div className="flex flex-1 justify-between flex-col gap-2">
             <div className="h-6 items-center text-gray-600">Private</div>
-            <div className="h-6 items-center flex -space-x-2">
-              {project.team.members.map((member) => (
+            <div className="h-6 items-center flex space-x-1">
+              {/* each only 5 */}
+              {project.team.members.slice(0, 5).map((member) => (
                 <div
                   key={member.user.id}
-                  className="flex items-center space-x-1"
+                  className={twMerge(
+                    "flex items-center space-x-1 border border-blue-300 rounded-full p-1 py-0 hover:bg-blue-50",
+                    "transition-colors duration-200 ease-in-out cursor-pointer"
+                  )}
                 >
                   <Image
                     key={member.user.id}
@@ -299,6 +302,11 @@ export default function ProjectBoard({
                   <span className="text-xs text-black">{member.user.name}</span>
                 </div>
               ))}
+              {project.team.members.length > 5 && (
+                <span className="text-xs text-gray-500">
+                  +{project.team.members.length - 5} more
+                </span>
+              )}
             </div>
             <div className="h-6 items-center text-gray-600 text-xs flex">
               No deadline
@@ -319,7 +327,15 @@ export default function ProjectBoard({
           </div>
         </div>
         <div className="flex items-center">
-          <Button className="bg-blue-500 text-white px-8 text-xs" icon={FaPlus} sizeIcon={8} classIcon="font-tight">Add Task</Button>
+          <Button
+            className="bg-blue-500 text-white px-8 text-xs"
+            icon={FaPlus}
+            sizeIcon={8}
+            classIcon="font-tight"
+            onClick={toggleModalCreateTask}
+          >
+            Add Task
+          </Button>
         </div>
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex space-x-3 overflow-x-auto">

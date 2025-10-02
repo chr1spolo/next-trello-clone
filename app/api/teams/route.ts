@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const userId = session.user.id as string;
   const userTeams = await prismaClientDefault.userTeam.findMany({
-    where: { userId },
+    where: { userId, accepted: true },
     include: {
       team: {
         include: {
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       members: {
         createMany: {
           data: [
-            { userId: session.user.id, role: "OWNER" },
+            { userId: session.user.id, role: "OWNER", accepted: true, joinedAt: new Date() },
             ...newMembersAdded.map((member) => ({
               userId: member.id,
               role: member.role,

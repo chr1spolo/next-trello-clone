@@ -110,7 +110,7 @@ const CreateTeamModal = () => {
           body: JSON.stringify({
             name: teamName,
             members: members.map((member) => ({
-              userId: member.userId,
+              email: member.user.email,
               role: member.role,
             })),
           }),

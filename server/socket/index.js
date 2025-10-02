@@ -18,6 +18,11 @@ const socketHandler = (socket, io) => {
     socket.broadcast.emit("update-task", updatedTaskString);
   });
 
+  socket.on("create-task", (newTaskString) => {
+    console.log("Received new task via WebSocket:", newTaskString);
+    io.emit("create-task", newTaskString);
+  });
+
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
   });

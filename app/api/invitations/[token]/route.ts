@@ -52,11 +52,14 @@ export async function POST(
         where: { id: invitation.id },
         data: { status: "ACCEPTED" },
       }),
-      prisma.userTeam.create({
-        data: {
+      prisma.userTeam.updateMany({
+        where: {
           userId: session.user.id,
           teamId: invitation.teamId,
-          role: "MEMBER", // join as members
+        },
+        data: {
+          accepted: true,
+          joinedAt: new Date(),
         },
       }),
     ]);

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type ModalType = "team" | "project" | null;
+type ModalType = "team" | "project" | "new-task" | null;
 
 interface ModalPayload {
   teamId?: string | null;

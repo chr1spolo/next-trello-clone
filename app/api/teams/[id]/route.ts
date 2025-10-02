@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import crypto from "crypto";
+
 import {
   authOptions,
   prismaClientDefault,
 } from "@/app/api/auth/[...nextauth]/route";
+import { pusher } from "@/lib/pusher";
 
 export async function GET(
   req: NextRequest,
@@ -67,7 +70,11 @@ export async function PUT(
     );
   }
 
-  if (["OWNER", "ADMIN"].includes(team.members.find((m) => m.userId === userId)?.role || "") === false) {
+  if (
+    !["OWNER", "ADMIN"].includes(
+      team.members.find((m) => m.userId === userId)?.role || ""
+    )
+  ) {
     return NextResponse.json(
       { error: "Only team owners/admin can update the team" },
       { status: 403 }
@@ -100,66 +107,106 @@ export async function PUT(
           data: { name },
         });
 
-        // Get current members
+        // Get current members excluding the owner
         const currentMembers = await prisma.userTeam.findMany({
-          where: { teamId: id },
+          where: {
+            teamId: id,
+          },
           include: { user: true },
         });
 
-        const currentMemberIds = currentMembers.map((m) => m.userId);
-        const newMemberEmails = members.map((m) => m.email);
+        // get the owner
+        const owner = currentMembers.find((m) => m.role === "OWNER");
 
-        // Find members to add
-        const membersToAdd = currentMembers.filter(
-          (cm) => !newMemberEmails.includes(cm.user.email || "")
+        const membersToAdd = members.filter(
+          (m) =>
+            !currentMembers.some(
+              (cm) => cm.user.email === m.email || m.email === owner?.user.email
+            )
         );
 
-        // Find members to remove
         const membersToRemove = currentMembers.filter(
           (cm) =>
-            newMemberEmails.includes(cm.user.email || "") && cm.role !== "OWNER"
+            !members.some((m) => m.email === cm.user.email) &&
+            cm.role !== "OWNER" // Prevent removing the owner
         );
 
-        await prisma.userTeam.createMany({
-          data: membersToAdd.map((m) => ({
-            teamId: id,
-            userId: m.userId,
-            role: m.role,
-          })),
+        // Add new members
+        const newMembersList = await prisma.user.findMany({
+          where: {
+            email: { in: membersToAdd.map((m) => m.email) },
+          },
         });
+        console.log("New members to add:", newMembersList);
+        await Promise.all(
+          newMembersList.map(async (user) => {
+            const token = crypto.randomBytes(32).toString("hex");
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7);
 
-        // Remove members
-        for (const member of membersToRemove) {
-          await prisma.userTeam.deleteMany({
-            where: {
-              teamId: id,
-              userId: member.userId,
-              role: { not: "OWNER" }, // Prevent removing OWNER
-            },
-          });
-        }
-
-        // Update roles of existing members
-        for (const member of currentMembers) {
-          const altMember = members.find((m) => m.email === member.user.email);
-          if (
-            altMember &&
-            altMember.role &&
-            altMember.role !== member.role &&
-            member.role !== "OWNER"
-          ) {
-            await prisma.userTeam.updateMany({
-              where: {
-                teamId: id,
-                userId: member.userId,
-                role: { not: "OWNER" }, // Prevent changing OWNER role
-              },
+            const newInvitation = await prisma.invitation.create({
               data: {
-                role: member.role,
+                email: user.email as string,
+                teamId: id,
+                token: token,
+                expiresAt,
+                inviterId: session.user.id,
               },
             });
-          }
-        }
+
+            await pusher.trigger(
+              `user-${newInvitation.email}`,
+              "new-invitation",
+              {
+                teamName: team.name,
+                token: newInvitation.token,
+                inviterId: session.user.id,
+                inviterName: session.user.name,
+                id: newInvitation.id,
+              }
+            );
+
+            console.log("Invitation created:", newInvitation);
+
+            await prisma.userTeam.create({
+              data: {
+                userId: user.id,
+                teamId: id,
+                role:
+                  membersToAdd.find((m) => m.email === user.email)?.role ||
+                  "MEMBER",
+              },
+            });
+
+            return true;
+          })
+        );
+
+        // Remove members
+        await Promise.all(
+          membersToRemove.map((member) =>
+            prisma.userTeam.delete({
+              where: { userId_teamId: { userId: member.userId, teamId: id } },
+            })
+          )
+        );
+
+        // update roles of existing members
+        await Promise.all(
+          currentMembers.map((cm) => {
+            const newRole = members.find(
+              (m) => m.email === cm.user.email
+            )?.role;
+            if (newRole && newRole !== cm.role && cm.role !== "OWNER") {
+              return prisma.userTeam.update({
+                where: {
+                  userId_teamId: { userId: cm.userId, teamId: id },
+                },
+                data: { role: newRole },
+              });
+            }
+          })
+        );
 
         return updated;
       }
